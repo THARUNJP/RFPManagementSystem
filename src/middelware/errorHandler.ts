@@ -2,6 +2,7 @@
 import { NextFunction, Request, Response } from "express";
 import AppError from "../lib/errors/appError";
 import { Prisma } from "@prisma/client";
+import { ZodError } from "zod";
 
 
 export const errorHandler = (
@@ -18,6 +19,13 @@ export const errorHandler = (
     statusCode = err.statusCode;
     clientMessage = err.message;
   }
+ else if (err instanceof ZodError) {
+  statusCode = 400;
+  // err.issues is an array of validation issues
+  clientMessage = err.issues
+    .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+    .join(", ") || "Validation failed";
+}
   //  Handle Prisma known errors
   else if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === "P2002") {
