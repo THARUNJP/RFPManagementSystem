@@ -42,3 +42,10 @@ export class InternalServerError extends AppError {
     super(message, 500);
   }
 }
+
+// 422 - Unprocessable Entity
+export class UnprocessableEntity extends AppError {
+  constructor(message = "Unprocessable Entity") {
+    super(message, 422);
+  }
+}
