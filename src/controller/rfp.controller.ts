@@ -9,8 +9,11 @@ async function createRfp(
     return res.status(200).json({
       status: true,
       message: "RFP created successfully",
+      body:req.body
     });
   } catch (err) {
     next(err);
   }
 }
+
+export {createRfp}
