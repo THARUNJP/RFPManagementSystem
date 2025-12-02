@@ -11,12 +11,12 @@ export async function createVendor(
   try {
     const { name, contact_email, phone } = req.body;
 
-    const vendor = await VendorService.create({ name, contact_email, phone });
+    const data = await VendorService.create({ name, contact_email, phone });
 
     return res.status(200).json({
       status: true,
       message: "Vendor created successfully",
-      document: vendor,
+      data,
     });
   } catch (err) {
     next(err);
@@ -31,12 +31,12 @@ export async function listVendors(
   try {
     const { page = "1", limit = "10" } = listVendorQuerySchema.parse(req.query);
 
-    const vendors = await VendorService.list(parseInt(page), parseInt(limit));
+    const data = await VendorService.list(parseInt(page), parseInt(limit));
 
     return res.status(200).json({
       status: true,
       message: "Vendors fetched successfully",
-      vendors,
+      data,
     });
   } catch (err) {
     next(err);
@@ -82,4 +82,25 @@ export async function deleteVendor(
     next(err);
   }
 }
+
+export async function getVendorById(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> {
+  try {
+    const { vendor_id } = vendorIdSchema.parse(req.params);
+
+    const data = await VendorService.getById(vendor_id);
+
+    return res.status(200).json({
+      status: true,
+      message: "Vendor fetched successfully",
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 
