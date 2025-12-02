@@ -7,6 +7,7 @@ const envSchema = z.object({
   PORT: z.string().default("8000"), // read as string from env
   DATABASE_URL: z.string(),
   SHADOW_DATABASE_URL: z.string(),
+  GEMINI_API_KEY: z.string(),
 });
 
 // 2. Parse and validate
@@ -18,6 +19,10 @@ const env = envSchema.parse(process.env);
 export const appEnv = {
   env: env.NODE_ENV,
   port: Number(env.PORT),
+
+  api_key: {
+    gemini: env.GEMINI_API_KEY,
+  },
 
   database: {
     main: env.DATABASE_URL,
