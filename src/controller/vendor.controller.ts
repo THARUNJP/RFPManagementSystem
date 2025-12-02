@@ -63,3 +63,23 @@ export async function updateVendor(
     next(err);
   }
 }
+
+export async function deleteVendor(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> {
+  try {
+    const { vendor_id } = vendorIdSchema.parse(req.params);
+
+    await VendorService.deleteById(vendor_id);
+
+    return res.status(200).json({
+      status: true,
+      message: "Vendor deleted successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
