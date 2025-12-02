@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import * as VendorService from "../service/vendor.service"
-import { listVendorQuerySchema } from "../validators/vendor.validator";
+import { listVendorQuerySchema, vendorIdSchema } from "../validators/vendor.validator";
 
 
 export async function createVendor(
@@ -43,3 +43,23 @@ export async function listVendors(
   }
 }
 
+export async function updateVendor(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> {
+  try {
+    const { vendor_id } = vendorIdSchema.parse(req.params);
+    const payload = req.body;
+
+    const data = await VendorService.update(vendor_id, payload);
+
+    return res.status(200).json({
+      status: true,
+      message: "Vendor updated successfully",
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
