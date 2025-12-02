@@ -41,7 +41,7 @@ export const getRfpById = async (req: Request, res: Response, next: NextFunction
 
 export const listRfps = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { page = "1", limit = "20" } = listRfpsQuerySchema.parse(req.query);
+    const { page = "1", limit = "10" } = listRfpsQuerySchema.parse(req.query);
 
     const rfps = await RFPService.list(parseInt(page), parseInt(limit));
 
