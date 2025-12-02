@@ -59,3 +59,19 @@ export async function deleteById(vendor_id: string) {
   return true;
 }
 
+export async function getById(vendor_id: string) {
+  const vendor = await prisma.vendors.findUnique({
+    where: {
+      vendor_id,
+      is_active: true,
+    },
+  });
+
+  if (!vendor) {
+    throw new NotFound("Vendor not found");
+  }
+
+  return vendor;
+}
+
+
