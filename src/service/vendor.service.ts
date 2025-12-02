@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma";
-import { CreateVendorInput } from "../validators/vendor.validator";
+import { CreateVendorInput, UpdateVendorInput } from "../validators/vendor.validator";
 
 export async function create({
   name,
@@ -29,4 +29,13 @@ export async function list(page: number, limit: number) {
   });
 
   return vendors;
+}
+
+export async function update(vendor_id: string, payload: UpdateVendorInput) {
+  const vendor = await prisma.vendors.update({
+    where: { vendor_id },
+    data: payload,
+  });
+
+  return vendor;
 }
