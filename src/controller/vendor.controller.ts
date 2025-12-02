@@ -36,7 +36,7 @@ export async function listVendors(
     return res.status(200).json({
       status: true,
       message: "Vendors fetched successfully",
-      documents: vendors,
+      vendors,
     });
   } catch (err) {
     next(err);
