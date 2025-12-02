@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+enum EmailStatus {
+  pending
+  sent
+  failed
+}
+
+model vendors {
+  vendor_id     String        @id @default(uuid())
+  name          String
+  contact_email String?
+  phone         String?
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+  is_active     Boolean       @default(true)
+
+  // Relations
+  rfp_vendors     rfp_vendors[]
+  vendor_emails   vendor_emails[]
+  proposals       proposals[]
+  comparisons     comparisons[]
+}
+
+model rfps {
+  rfp_id                String        @id @default(uuid())
+  title                 String
+  description_raw       String?
+  description_structured Json?
+  budget                Decimal?
+  delivery_timeline     String?
+  payment_terms         String?
+  warranty              String?
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+  is_active             Boolean @default(true)
+
+  // Relations
+  rfp_vendors    rfp_vendors[]
+  vendor_emails  vendor_emails[]
+  proposals      proposals[]
+  comparisons    comparisons[]
+}
+
+model rfp_vendors {
+  id           String      @id @default(uuid())
+  rfp_id       String
+  vendor_id    String
+  email_status EmailStatus @default(pending)
+  sent_at      DateTime?
+  created_at   DateTime    @default(now())
+  updated_at   DateTime    @updatedAt
+  is_active    Boolean     @default(true)
+
+  // Relations
+  rfps    rfps    @relation(fields: [rfp_id], references: [rfp_id])
+  vendors vendors @relation(fields: [vendor_id], references: [vendor_id])
+}
+
+model vendor_emails {
+  email_id       String   @id @default(uuid())
+  rfp_id         String
+  vendor_id      String
+  subject        String?
+  email_body_raw String?
+  attachments    Json?
+  received_at    DateTime?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  is_active      Boolean  @default(true)
+
+  // Relations
+  rfps      rfps      @relation(fields: [rfp_id], references: [rfp_id])
+  vendors   vendors   @relation(fields: [vendor_id], references: [vendor_id])
+  proposals proposals?
+}
+
+model proposals {
+  proposal_id        String   @id @default(uuid())
+  rfp_id             String
+  vendor_id          String
+  email_id           String
+  parsed_proposal    Json?
+  total_price        Decimal?
+  delivery_days      Int?
+  payment_terms      String?
+  warranty           String?
+  completeness_score Int?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  is_active          Boolean  @default(true)
+
+  // Relations
+  rfps          rfps          @relation(fields: [rfp_id], references: [rfp_id])
+  vendors       vendors       @relation(fields: [vendor_id], references: [vendor_id])
+  vendor_emails vendor_emails @relation(fields: [email_id], references: [email_id])
+}
+
+model comparisons {
+  comparison_id         String   @id @default(uuid())
+  rfp_id                String
+  result_json           Json?
+  recommended_vendor_id String
+  generated_at          DateTime?
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+  is_active             Boolean  @default(true)
+
+  // Relations
+  rfps    rfps    @relation(fields: [rfp_id], references: [rfp_id])
+  vendors vendors @relation(fields: [recommended_vendor_id], references: [vendor_id])
+}
