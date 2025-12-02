@@ -1,0 +1,95 @@
+@startuml ER_DIAGRAM
+
+entity vendors {
+  **vendor_id**: UUID <<PK>>
+  --
+  name: TEXT
+  contact_email: TEXT
+  phone: TEXT
+  created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at: TIMESTAMP DEFAULT triggeFunc()
+  is_active: BOOLEAN DEFAULT true
+}
+
+entity rfps {
+  **rfp_id**: UUID <<PK>>
+  --
+  title: TEXT
+  description_raw: TEXT
+  description_structured: JSONB
+  budget: NUMERIC
+  delivery_timeline: TEXT
+  payment_terms: TEXT
+  warranty: TEXT
+  created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at: TIMESTAMP DEFAULT triggeFunc()
+  is_active: BOOLEAN DEFAULT true
+}
+
+entity rfp_vendors {
+  **id**: UUID <<PK>>
+  --
+  rfp_id: UUID
+  vendor_id: UUID
+  email_status: TEXT  <<'pending' | 'sent' | 'failed'>>
+  sent_at: TIMESTAMP
+  created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at: TIMESTAMP DEFAULT triggeFunc()
+  is_active: BOOLEAN DEFAULT true
+}
+
+entity vendor_emails {
+  **email_id**: UUID <<PK>>
+  --
+  rfp_id: UUID
+  vendor_id: UUID
+  subject: TEXT
+  email_body_raw: TEXT
+  attachments: JSONB
+  received_at: TIMESTAMP
+  created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at: TIMESTAMP DEFAULT triggeFunc()
+  is_active: BOOLEAN DEFAULT true
+}
+
+entity proposals {
+  **proposal_id**: UUID <<PK>>
+  --
+  rfp_id: UUID
+  vendor_id: UUID
+  email_id: UUID
+  parsed_proposal: JSONB
+  total_price: NUMERIC
+  delivery_days: INT
+  payment_terms: TEXT
+  warranty: TEXT
+  completeness_score: INT
+  created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at: TIMESTAMP DEFAULT triggeFunc()
+  is_active: BOOLEAN DEFAULT true
+}
+
+entity comparisons {
+  **comparison_id**: UUID <<PK>>
+  --
+  rfp_id: UUID
+  result_json: JSONB
+  recommended_vendor_id: UUID
+  generated_at: TIMESTAMP
+  created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at: TIMESTAMP DEFAULT triggeFunc()
+  is_active: BOOLEAN DEFAULT true
+}
+
+' Relationships
+vendors ||--o{ rfp_vendors : selected_for
+rfps ||--o{ rfp_vendors : sends_to
+rfps ||--o{ vendor_emails : receives_email
+vendors ||--o{ vendor_emails : sends
+vendor_emails ||--|| proposals : parsed_into
+rfps ||--o{ proposals : contains
+vendors ||--o{ proposals : provides
+rfps ||--o{ comparisons : has
+vendors ||--|| comparisons : recommended_vendor
+
+@enduml
