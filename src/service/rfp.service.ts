@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma";
-import { UnprocessableEntity } from "../lib/errors/httpError";
+import { NotFound, UnprocessableEntity } from "../lib/errors/httpError";
 import { buildRfpPrompt, isEmptyResult } from "../lib/helper/helper";
 import { Gemini } from "../llm/gemini.llm";
 import { CreateRfpInput } from "../validators/rfp.validator";
@@ -40,5 +40,36 @@ export const create = async ({ title, description_raw }: CreateRfpInput) => {
   });
 
   return newRfp;
+};
+
+export const getById = async (rfp_id: string) => {
+  const rfp = await prisma.rfps.findUnique({
+    where: { rfp_id },
+  });
+
+  if (!rfp) {
+    throw new NotFound("RFP not found");
+  }
+
+  return rfp;
+};
+
+export const list = async (page = 1, limit = 20) => {
+  const skip = (page - 1) * limit;
+
+  const rfps = await prisma.rfps.findMany({
+    skip,
+    take: limit,
+    orderBy: { created_at: "desc" },
+    select: {
+      rfp_id: true,
+      title: true,
+      budget: true,
+      created_at: true,
+      description_structured:true
+    },
+  });
+
+  return rfps;
 };
 

@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import * as RFPService from "../service/rfp.service"
+import { getRfpParamsSchema, listRfpsQuerySchema } from "../validators/rfp.validator";
 
 async function createRfp(
   req: Request,
@@ -21,5 +22,37 @@ async function createRfp(
     next(err);
   }
 }
+
+export const getRfpById = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { rfp_id } = getRfpParamsSchema.parse(req.params);
+
+    const rfp = await RFPService.getById(rfp_id);
+
+    return res.status(200).json({
+      status: true,
+      message: "RFP fetched successfully",
+      document: rfp,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const listRfps = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { page = "1", limit = "20" } = listRfpsQuerySchema.parse(req.query);
+
+    const rfps = await RFPService.list(parseInt(page), parseInt(limit));
+
+    return res.status(200).json({
+      status: true,
+      message: "RFP list fetched successfully",
+      documents: rfps,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
 export { createRfp };
