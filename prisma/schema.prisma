@@ -13,7 +13,7 @@ enum EmailStatus {
 }
 
 model vendors {
-  vendor_id     String        @id @default(uuid())
+  vendor_id     String        @id @default(ulid())
   name          String
   contact_email String?
   phone         String?
@@ -29,7 +29,7 @@ model vendors {
 }
 
 model rfps {
-  rfp_id                String        @id @default(uuid())
+  rfp_id                String        @id @default(ulid())
   title                 String
   description_raw       String?
   description_structured Json?
@@ -37,9 +37,9 @@ model rfps {
   delivery_timeline     String?
   payment_terms         String?
   warranty              String?
-  created_at            DateTime @default(now())
-  updated_at            DateTime @updatedAt
-  is_active             Boolean @default(true)
+  created_at            DateTime      @default(now())
+  updated_at            DateTime      @updatedAt
+  is_active             Boolean       @default(true)
 
   // Relations
   rfp_vendors    rfp_vendors[]
@@ -49,7 +49,7 @@ model rfps {
 }
 
 model rfp_vendors {
-  id           String      @id @default(uuid())
+  id           String      @id @default(ulid())
   rfp_id       String
   vendor_id    String
   email_status EmailStatus @default(pending)
@@ -64,7 +64,7 @@ model rfp_vendors {
 }
 
 model vendor_emails {
-  email_id       String   @id @default(uuid())
+  email_id       String   @id @default(ulid())
   rfp_id         String
   vendor_id      String
   subject        String?
@@ -78,11 +78,11 @@ model vendor_emails {
   // Relations
   rfps      rfps      @relation(fields: [rfp_id], references: [rfp_id])
   vendors   vendors   @relation(fields: [vendor_id], references: [vendor_id])
-  proposals proposals[]  // FIXED: one-to-many instead of one-to-one
+  proposals proposals[]  // one-to-many
 }
 
 model proposals {
-  proposal_id        String   @id @default(uuid())
+  proposal_id        String   @id @default(ulid())
   rfp_id             String
   vendor_id          String
   email_id           String
@@ -103,7 +103,7 @@ model proposals {
 }
 
 model comparisons {
-  comparison_id         String   @id @default(uuid())
+  comparison_id         String   @id @default(ulid())
   rfp_id                String
   result_json           Json?
   recommended_vendor_id String
@@ -116,3 +116,4 @@ model comparisons {
   rfps    rfps    @relation(fields: [rfp_id], references: [rfp_id])
   vendors vendors @relation(fields: [recommended_vendor_id], references: [vendor_id])
 }
+
