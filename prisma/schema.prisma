@@ -4,8 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url               = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 enum EmailStatus {
@@ -80,7 +78,7 @@ model vendor_emails {
   // Relations
   rfps      rfps      @relation(fields: [rfp_id], references: [rfp_id])
   vendors   vendors   @relation(fields: [vendor_id], references: [vendor_id])
-  proposals proposals?
+  proposals proposals[]  // FIXED: one-to-many instead of one-to-one
 }
 
 model proposals {
@@ -101,7 +99,7 @@ model proposals {
   // Relations
   rfps          rfps          @relation(fields: [rfp_id], references: [rfp_id])
   vendors       vendors       @relation(fields: [vendor_id], references: [vendor_id])
-  vendor_emails vendor_emails @relation(fields: [email_id], references: [email_id])
+  vendor_email  vendor_emails @relation(fields: [email_id], references: [email_id])
 }
 
 model comparisons {
