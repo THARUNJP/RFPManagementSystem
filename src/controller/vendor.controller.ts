@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import * as VendorService from "../service/vendor.service"
+import { listVendorQuerySchema } from "../validators/vendor.validator";
 
 
 export async function createVendor(
@@ -21,3 +22,24 @@ export async function createVendor(
     next(err);
   }
 }
+
+export async function listVendors(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> {
+  try {
+    const { page = "1", limit = "10" } = listVendorQuerySchema.parse(req.query);
+
+    const vendors = await VendorService.list(parseInt(page), parseInt(limit));
+
+    return res.status(200).json({
+      status: true,
+      message: "Vendors fetched successfully",
+      documents: vendors,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
