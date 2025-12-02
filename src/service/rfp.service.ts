@@ -8,13 +8,12 @@ import { CreateRfpInput } from "../validators/rfp.validator";
 export const create = async ({ title, description_raw }: CreateRfpInput) => {
 
   const prompt = buildRfpPrompt(description_raw);
-  const llmRaw = await Gemini(prompt);
+  const description_structured = await Gemini(prompt);
 
-  if (isEmptyResult(llmRaw)) {
+  if (isEmptyResult(description_structured)) {
     throw new UnprocessableEntity("Structured RFP generation failed — AI returned empty result");
   }
 
-  const description_structured = JSON.parse(llmRaw);
 
   if (isEmptyResult(description_structured)) {
     throw new UnprocessableEntity("Structured RFP generation failed — AI returned invalid JSON structure");
