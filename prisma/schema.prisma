@@ -61,6 +61,7 @@ model rfp_vendors {
   // Relations
   rfps    rfps    @relation(fields: [rfp_id], references: [rfp_id])
   vendors vendors @relation(fields: [vendor_id], references: [vendor_id])
+   @@unique([rfp_id, vendor_id])
 }
 
 model vendor_emails {

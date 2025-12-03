@@ -16,3 +16,7 @@ export async function sendEmail({ to, subject, html }: EmailPayload): Promise<bo
     return false; // failed to send
   }
 }
+
+export const sendVendor = async()=> {
+    
+}

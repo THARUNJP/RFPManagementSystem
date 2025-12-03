@@ -75,8 +75,47 @@ export const list = async (page = 1, limit = 20) => {
 };
 
 export const send = async ({ rfp_id, vendor_ids }: SendRfpInput) => {
-  console.log("callback is called", rfp_id, vendor_ids);
+  for (const vendor_id of vendor_ids) {
+    try {
+      // Create or reuse existing record
+      const record = await prisma.rfp_vendors.upsert({
+        where: {
+          rfp_id_vendor_id: { rfp_id, vendor_id },
+        },
+        create: {
+          rfp_id,
+          vendor_id,
+          email_status: "pending",
+        },
+        update: {}, // keep as-is if exists
+      });
+
+      // TODO: call your email service here
+      // await EmailService.sendRfpEmail({ rfp_id, vendor_id });
+
+      // Mark as sent
+      await prisma.rfp_vendors.update({
+        where: { id: record.id },
+        data: {
+          email_status: "sent",
+          sent_at: new Date(),
+        },
+      });
+
+    } catch (err) {
+      // Mark the specific vendor as failed
+      await prisma.rfp_vendors.update({
+        where: {
+          rfp_id_vendor_id: { rfp_id, vendor_id },
+        },
+        data: {
+          email_status: "failed",
+        },
+      });
+    }
+  }
 };
+
 
 export const checkById = async (rfp_id: string): Promise<void> => {
   const exists = await prisma.rfps.findUnique({
@@ -88,4 +127,3 @@ export const checkById = async (rfp_id: string): Promise<void> => {
     throw new NotFound("RFP not found");
   }
 };
-
