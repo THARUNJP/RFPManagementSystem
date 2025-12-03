@@ -74,7 +74,7 @@ export const list = async (page = 1, limit = 20) => {
 
   return rfps;
 };
-
+// Needs to implement batching later for performance
 export const send = async ({ rfp_id, vendor_ids }: SendRfpInput) => {
   for (const vendor_id of vendor_ids) {
     try {
