@@ -10,7 +10,6 @@ npm run build
 # Start the production server
 npm start     
 
-
 # Decision: Background Processing vs Job Queue
 
 We used simple in-process background processing here for quick, non-blocking email sending; a job queue can be added later for better scalability.
