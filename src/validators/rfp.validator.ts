@@ -16,4 +16,13 @@ export const listRfpsQuerySchema = z.object({
   limit: z.string().optional(),
 });
 
+export const sendRfpSchema = z.object({
+  vendor_ids: z.array(z.ulid()).nonempty(),
+});
+
+export const sendRfpParamsSchema = z.object({
+  rfp_id: z.ulid(),
+});
+
 export type CreateRfpInput = z.infer<typeof CreateRfpSchema>;
+export type sesendRfpInput = z.infer<typeof sendRfpSchema>;
