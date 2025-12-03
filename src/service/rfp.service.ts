@@ -1,4 +1,5 @@
 import { prisma } from "../config/prisma";
+import { BATCH_SIZE } from "../lib/constant/constant";
 import { NotFound, UnprocessableEntity } from "../lib/errors/httpError";
 import { buildRfpPrompt, isEmptyResult } from "../lib/helper/helper";
 import { Gemini } from "../llm/gemini.llm";
@@ -76,43 +77,37 @@ export const list = async (page = 1, limit = 20) => {
 };
 // Needs to implement batching later for performance
 export const send = async ({ rfp_id, vendor_ids }: SendRfpInput) => {
-  for (const vendor_id of vendor_ids) {
-    try {
-      // Create or reuse existing record
-      const record = await prisma.rfp_vendors.upsert({
-        where: {
-          rfp_id_vendor_id: { rfp_id, vendor_id },
-        },
-        create: {
-          rfp_id,
-          vendor_id,
-          email_status: "pending",
-        },
-        update: {}, // keep as-is if exists
-      });
+  for (let i = 0; i < vendor_ids.length; i += BATCH_SIZE) {
+    const batch = vendor_ids.slice(i, i + BATCH_SIZE);
 
-      // TODO: call your email service here
-      await EmailService.sendVendor(rfp_id, vendor_id);
+    // Process all vendors in the batch concurrently
+    await Promise.all(
+      batch.map(async (vendor_id) => {
+        try {
+          // Upsert the vendor record
+          const record = await prisma.rfp_vendors.upsert({
+            where: { rfp_id_vendor_id: { rfp_id, vendor_id } },
+            create: { rfp_id, vendor_id, email_status: "pending" },
+            update: {},
+          });
 
-      // Mark as sent
-      await prisma.rfp_vendors.update({
-        where: { id: record.id },
-        data: {
-          email_status: "sent",
-          sent_at: new Date(),
-        },
-      });
-    } catch (err) {
-      // Mark the specific vendor as failed
-      await prisma.rfp_vendors.update({
-        where: {
-          rfp_id_vendor_id: { rfp_id, vendor_id },
-        },
-        data: {
-          email_status: "failed",
-        },
-      });
-    }
+          // Send email
+          await EmailService.sendVendor(rfp_id, vendor_id);
+
+          // Mark as sent
+          await prisma.rfp_vendors.update({
+            where: { id: record.id },
+            data: { email_status: "sent", sent_at: new Date() },
+          });
+        } catch (err) {
+          // Mark as failed
+          await prisma.rfp_vendors.update({
+            where: { rfp_id_vendor_id: { rfp_id, vendor_id } },
+            data: { email_status: "failed" },
+          });
+        }
+      })
+    );
   }
 };
 
