@@ -11,6 +11,8 @@ router.get("/:rfp_id", getRfpById);
 router.get("/", listRfps);
 router.post("/", validators.createRfp, createRfp);
 router.post("/:rfp_id/send",validators.sendRfp,sendRfp);
+router.get("/rfps/:rfp_id/vendors", ()=>{});
+
 
 
 export default router;
