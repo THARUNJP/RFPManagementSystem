@@ -74,6 +74,8 @@ export const sendRfp = async (
   try {
     const { rfp_id } = sendRfpParamsSchema.parse(req.params);
     const { vendor_ids } = req.body;
+    
+    await RFPService.checkById(rfp_id);
 
     res.status(202).json({
       status: true,

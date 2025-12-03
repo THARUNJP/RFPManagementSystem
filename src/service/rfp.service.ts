@@ -75,6 +75,17 @@ export const list = async (page = 1, limit = 20) => {
 };
 
 export const send = async ({ rfp_id, vendor_ids }: SendRfpInput) => {
-  console.log("callback is called",rfp_id,vendor_ids);
-  
+  console.log("callback is called", rfp_id, vendor_ids);
 };
+
+export const checkById = async (rfp_id: string): Promise<void> => {
+  const exists = await prisma.rfps.findUnique({
+    where: { rfp_id },
+    select: { rfp_id: true },
+  });
+
+  if (!exists) {
+    throw new NotFound("RFP not found");
+  }
+};
+
