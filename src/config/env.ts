@@ -8,6 +8,8 @@ const envSchema = z.object({
   DATABASE_URL: z.string(),
   SHADOW_DATABASE_URL: z.string(),
   GEMINI_API_KEY: z.string(),
+  GMAIL_USER: z.string(),
+  GMAIL_APP_PASSWORD: z.string(),
 });
 
 // 2. Parse and validate
@@ -27,5 +29,9 @@ export const appEnv = {
   database: {
     main: env.DATABASE_URL,
     shadow: env.SHADOW_DATABASE_URL,
+  },
+  email: {
+    user: env.GMAIL_USER,
+    appPassword: env.GMAIL_APP_PASSWORD,
   },
 };
