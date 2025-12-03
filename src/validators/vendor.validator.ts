@@ -42,5 +42,5 @@ export const rawVendorEmailSchema = z.object({
 
 export type CreateVendorInput = z.infer<typeof createVendorSchema>;
 export type UpdateVendorInput = z.infer<typeof updateVendorSchema>;
-export type RawVendorEmail = z.infer<typeof rawVendorEmailSchema>;
+export type RawVendorEmailInput = z.infer<typeof rawVendorEmailSchema>;
 

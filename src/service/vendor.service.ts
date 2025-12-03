@@ -1,6 +1,6 @@
 import { prisma } from "../config/prisma";
 import { NotFound } from "../lib/errors/httpError";
-import { CreateVendorInput, UpdateVendorInput } from "../validators/vendor.validator";
+import { CreateVendorInput, RawVendorEmailInput, UpdateVendorInput } from "../validators/vendor.validator";
 
 export async function create({
   name,
@@ -72,6 +72,10 @@ export async function getById(vendor_id: string) {
   }
 
   return vendor;
+}
+
+export async function processEmail({from,to,subject,text,html}:RawVendorEmailInput) {
+  
 }
 
 

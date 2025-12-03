@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import * as VendorService from "../service/vendor.service"
-import { listVendorQuerySchema, vendorIdSchema } from "../validators/vendor.validator";
+import { listVendorQuerySchema, rawVendorEmailSchema, vendorIdSchema } from "../validators/vendor.validator";
 
 
 export async function createVendor(
@@ -102,5 +102,18 @@ export async function getVendorById(
     next(err);
   }
 }
+
+export const handleIncomingVendorEmail = async (email: any) => {
+  try {
+    // Validate the raw email
+    const parsedEmail = rawVendorEmailSchema.parse(email);
+
+    // Call the service layer to process/store the email
+    await VendorService.processEmail(parsedEmail);
+
+  } catch (err) {
+    console.error("Validation or Processing Error:", err);
+  }
+};
 
 
