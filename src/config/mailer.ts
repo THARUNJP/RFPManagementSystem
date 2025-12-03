@@ -20,5 +20,5 @@ export function createEmailTransporter(): Transporter {
   return transporter;
 }
 
-const emailTransporter = createEmailTransporter();
-export default emailTransporter;
+const transporter = createEmailTransporter();
+export default transporter;
