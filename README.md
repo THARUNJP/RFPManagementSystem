@@ -10,6 +10,9 @@ npm run build
 # Start the production server
 npm start     
 
+# Seed the database with default data
+npm run seed
+
 # Decision: Background Processing vs Job Queue
 
 We used simple in-process background processing here for quick, non-blocking email sending; a job queue can be added later for better scalability.
