@@ -33,8 +33,9 @@ Return ONLY valid JSON in this exact format:
 
 {
   "items": [
-    { "type": "string", "quantity": number, "specs": "string" }
-  ],
+      { "type": "string", "specs": "string", "quantity": number, "unit_price": number, "total_price": number }
+    ],
+  "total_price":number,
   "budget": number,
   "delivery_timeline": "string",
   "payment_terms": "string",
