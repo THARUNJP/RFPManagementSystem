@@ -150,3 +150,22 @@ export const mapRfpToEmailData = (rfp: {
     created_at: rfp.created_at.toISOString(),
   };
 };
+
+/**
+ * Extract RFP ULID from a string.
+ * 1️ Try to match "RFP Link ID: <ULID>"
+ * 2️ Fallback: find any 26-character ULID
+ */
+export const extractRfpUlid = (text: string): string | null => {
+  if (!text) return null;
+
+  // Step 1: Try exact "RFP Link ID: <ULID>" format
+  const prefixedRegex = /RFP Link ID:\s*([0-7A-Z]{26})/i;
+  const prefixedMatch = text.match(prefixedRegex);
+  if (prefixedMatch) return prefixedMatch[1];
+
+  // Step 2: Fallback: scan for any 26-character ULID
+  const ulidRegex = /[0-7A-Z]{26}/g;
+  const fallbackMatch = text.match(ulidRegex);
+  return fallbackMatch ? fallbackMatch[0] : null;
+};
