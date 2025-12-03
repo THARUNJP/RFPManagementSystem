@@ -3,6 +3,7 @@ import { NotFound, UnprocessableEntity } from "../lib/errors/httpError";
 import { buildRfpPrompt, isEmptyResult } from "../lib/helper/helper";
 import { Gemini } from "../llm/gemini.llm";
 import { CreateRfpInput, SendRfpInput } from "../validators/rfp.validator";
+import * as EmailService from "./email.service";
 
 export const create = async ({ title, description_raw }: CreateRfpInput) => {
   const prompt = buildRfpPrompt(description_raw);
@@ -91,7 +92,7 @@ export const send = async ({ rfp_id, vendor_ids }: SendRfpInput) => {
       });
 
       // TODO: call your email service here
-      // await EmailService.sendRfpEmail({ rfp_id, vendor_id });
+      await EmailService.sendVendor(rfp_id, vendor_id);
 
       // Mark as sent
       await prisma.rfp_vendors.update({
@@ -101,7 +102,6 @@ export const send = async ({ rfp_id, vendor_ids }: SendRfpInput) => {
           sent_at: new Date(),
         },
       });
-
     } catch (err) {
       // Mark the specific vendor as failed
       await prisma.rfp_vendors.update({
@@ -115,7 +115,6 @@ export const send = async ({ rfp_id, vendor_ids }: SendRfpInput) => {
     }
   }
 };
-
 
 export const checkById = async (rfp_id: string): Promise<void> => {
   const exists = await prisma.rfps.findUnique({

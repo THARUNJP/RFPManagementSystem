@@ -124,3 +124,19 @@ export const generateRfpEmailHtml = (rfp: RfpEmailData): string => {
     </html>
   `;
 };
+
+export const mapRfpToEmailData = (rfp: {
+  rfp_id: string;
+  title: string;
+  description_raw: string | null;
+  description_structured: any;
+  created_at: Date;
+}): RfpEmailData => {
+  return {
+    rfp_id: rfp.rfp_id,
+    title: rfp.title,
+    description_raw: rfp.description_raw ?? undefined,
+    description_structured: rfp.description_structured ?? undefined,
+    created_at: rfp.created_at.toISOString(),
+  };
+};
