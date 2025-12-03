@@ -25,4 +25,4 @@ export const sendRfpParamsSchema = z.object({
 });
 
 export type CreateRfpInput = z.infer<typeof CreateRfpSchema>;
-export type sesendRfpInput = z.infer<typeof sendRfpSchema>;
+export type SendRfpInput = z.infer<typeof sendRfpParamsSchema> & z.infer<typeof sendRfpSchema>;
