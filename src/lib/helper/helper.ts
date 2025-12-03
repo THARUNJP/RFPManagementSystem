@@ -70,11 +70,20 @@ export const generateRfpEmailHtml = (rfp: RfpEmailData): string => {
         h1 { color: #1a73e8; }
         .rfp-section { margin-bottom: 20px; }
         .rfp-label { font-weight: bold; }
+        .highlight { color: #d32f2f; font-weight: bold; }
         .footer { margin-top: 30px; font-size: 0.9em; color: #666; }
       </style>
     </head>
     <body>
       <h1>New Request for Proposal (RFP)</h1>
+
+      <div class="rfp-section">
+        <p class="highlight">
+          ⚠️ Important: Please <strong>reply to this same email</strong> without changing the subject line. 
+          Include the following RFP Link ID in your reply: 
+          Only responses that include this ID will be considered for your proposal.
+        </p>
+      </div>
 
       <div class="rfp-section">
         <span class="rfp-label">Title:</span> ${rfp.title}
@@ -124,6 +133,7 @@ export const generateRfpEmailHtml = (rfp: RfpEmailData): string => {
     </html>
   `;
 };
+
 
 export const mapRfpToEmailData = (rfp: {
   rfp_id: string;

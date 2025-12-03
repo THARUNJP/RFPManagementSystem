@@ -20,7 +20,7 @@ export async function sendEmail({ to, subject, html }: EmailPayload): Promise<bo
   }
 }
 
-export const sendVendor = async (rfp_id: string, vendor_id: string) => {
+export const sendVendor = async (rfp_id: string, vendor_id: string,linkRfId:string) => {
   // 1. Fetch RFP
   const rfp = await prisma.rfps.findUnique({
     where: { rfp_id },
@@ -52,9 +52,10 @@ export const sendVendor = async (rfp_id: string, vendor_id: string) => {
 
   // 5. Send email
   await sendEmail({
-    to: vendor.contact_email,
-    subject: `New RFP: ${rfp.title}`,
-    html,
-  });
+  to: vendor.contact_email,
+  subject: `New RFP: ${rfp.title} — RFP Link ID: ${linkRfId}`, // added linkRfId
+  html,
+});
+
 };
 

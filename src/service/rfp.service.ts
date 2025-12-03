@@ -92,7 +92,7 @@ export const send = async ({ rfp_id, vendor_ids }: SendRfpInput) => {
           });
 
           // Send email
-          await EmailService.sendVendor(rfp_id, vendor_id);
+          await EmailService.sendVendor(rfp_id, vendor_id,record.id);
 
           // Mark as sent
           await prisma.rfp_vendors.update({
