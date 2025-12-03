@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import * as RFPService from "../service/rfp.service";
 import {
   getRfpParamsSchema,
+  GetRfpVendorsParamsSchema,
   listRfpsQuerySchema,
   sendRfpParamsSchema,
 } from "../validators/rfp.validator";
@@ -89,5 +90,22 @@ export const sendRfp = async (
     next(err);
   }
 };
+
+export async function getRfpVendors(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { rfp_id } = GetRfpVendorsParamsSchema.parse(req.params);
+  
+    const data = await RFPService.getVendors(rfp_id);
+
+    return res.status(200).json({
+       status: true,
+       rfp_id,
+       data
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 
 export { createRfp };

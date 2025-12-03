@@ -115,3 +115,37 @@ export const checkById = async (rfp_id: string): Promise<void> => {
     throw new NotFound("RFP not found");
   }
 };
+
+export async function getVendors(rfp_id: string) {
+  // Verify RFP exists & active
+  const rfp = await prisma.rfps.findFirst({
+    where: { rfp_id, is_active: true }
+  });
+
+  if (!rfp) {
+    throw new NotFound("RFP not found");
+  }
+
+  // Query rfp_vendors with vendor name
+  const records = await prisma.rfp_vendors.findMany({
+    where: { rfp_id, is_active: true },
+    select: {
+      vendor_id: true,
+      email_status: true,
+      vendors: {
+        select: {
+          name: true,
+          contact_email:true,
+          
+        }
+      }
+    }
+  });
+
+  return records.map(r => ({
+    vendor_id: r.vendor_id,
+    name: r.vendors.name,
+    email_status: r.email_status
+  }));
+}
+
