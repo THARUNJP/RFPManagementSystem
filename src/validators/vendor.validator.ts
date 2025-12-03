@@ -23,6 +23,24 @@ export const listVendorQuerySchema = z.object({
   page: z.string().optional(),
   limit: z.string().optional(),
 });
+export const rawVendorEmailSchema = z.object({
+  from: z.email(),
+  to: z.email(),
+  subject: z.string().min(1),
+  text: z.string().optional(),
+  html: z.string().optional(),
+  attachments: z
+    .array(
+      z.object({
+        fileName: z.string(),
+        content: z.instanceof(Buffer), // raw file content
+      })
+    )
+    .optional(),
+});
+
 
 export type CreateVendorInput = z.infer<typeof createVendorSchema>;
 export type UpdateVendorInput = z.infer<typeof updateVendorSchema>;
+export type RawVendorEmail = z.infer<typeof rawVendorEmailSchema>;
+

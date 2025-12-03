@@ -3,6 +3,7 @@ import cors from "cors"
 import router from "./router/index.router";
 import { errorHandler } from "./middelware/errorHandler";
 import { healthz } from "./controller/health.controller";
+import { startEmailListener } from "./service/imap.service";
 // import helmet from "helmet"
 // import { limiter, timeoutMiddleware } from "./middleware/timeoutMiddleware";
 
@@ -17,6 +18,7 @@ app.use(express.json());
 // app.use(limiter)
 // app.use(timeoutMiddleware)
 // app.use(helmet())
+startEmailListener().catch(console.error);
 
 
 app.use("/api/v1",router)
