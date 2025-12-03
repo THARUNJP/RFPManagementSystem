@@ -25,6 +25,33 @@ ${descriptionRaw}
 `;
 }
 
+export function buildProposalPrompt(emailText: string) {
+  return `
+Extract structured proposal data from the following vendor email.
+
+Return ONLY valid JSON in this exact format:
+
+{
+  "items": [
+    { "type": "string", "quantity": number, "specs": "string" }
+  ],
+  "budget": number,
+  "delivery_timeline": "string",
+  "payment_terms": "string",
+  "warranty": "string",
+  "completeness_score": number
+}
+
+
+If a field is missing, return null.
+
+Vendor Email Text:
+"""
+${emailText}
+"""
+`;
+}
+
 export function isEmptyResult(value: any): boolean {
   if (value === null || value === undefined) return true;
   if (typeof value === "string" && value.trim() === "") return true;
@@ -48,9 +75,15 @@ export const generateRfpEmailHtml = (rfp: RfpEmailData): string => {
              .map(
                (item) => `
                <tr>
-                 <td style="border: 1px solid #ccc; padding: 8px;">${item.type}</td>
-                 <td style="border: 1px solid #ccc; padding: 8px;">${item.specs || "-"}</td>
-                 <td style="border: 1px solid #ccc; padding: 8px;">${item.quantity}</td>
+                 <td style="border: 1px solid #ccc; padding: 8px;">${
+                   item.type
+                 }</td>
+                 <td style="border: 1px solid #ccc; padding: 8px;">${
+                   item.specs || "-"
+                 }</td>
+                 <td style="border: 1px solid #ccc; padding: 8px;">${
+                   item.quantity
+                 }</td>
                </tr>`
              )
              .join("")}
@@ -89,42 +122,72 @@ export const generateRfpEmailHtml = (rfp: RfpEmailData): string => {
         <span class="rfp-label">Title:</span> ${rfp.title}
       </div>
 
-      ${rfp.description_raw ? `
+      ${
+        rfp.description_raw
+          ? `
       <div class="rfp-section">
         <span class="rfp-label">Description:</span>
         <p>${rfp.description_raw}</p>
-      </div>` : ""}
+      </div>`
+          : ""
+      }
 
-      ${itemsTable ? `
+      ${
+        itemsTable
+          ? `
       <div class="rfp-section">
         <span class="rfp-label">Items:</span>
         ${itemsTable}
-      </div>` : ""}
+      </div>`
+          : ""
+      }
 
-      ${rfp.description_structured?.budget ? `
+      ${
+        rfp.description_structured?.budget
+          ? `
       <div class="rfp-section">
         <span class="rfp-label">Budget:</span> $${rfp.description_structured.budget.toLocaleString()}
-      </div>` : ""}
+      </div>`
+          : ""
+      }
 
-      ${rfp.description_structured?.delivery_timeline ? `
+      ${
+        rfp.description_structured?.delivery_timeline
+          ? `
       <div class="rfp-section">
         <span class="rfp-label">Delivery Timeline:</span> ${rfp.description_structured.delivery_timeline}
-      </div>` : ""}
+      </div>`
+          : ""
+      }
 
-      ${rfp.description_structured?.payment_terms ? `
+      ${
+        rfp.description_structured?.payment_terms
+          ? `
       <div class="rfp-section">
         <span class="rfp-label">Payment Terms:</span> ${rfp.description_structured.payment_terms}
-      </div>` : ""}
+      </div>`
+          : ""
+      }
 
-      ${rfp.description_structured?.warranty ? `
+      ${
+        rfp.description_structured?.warranty
+          ? `
       <div class="rfp-section">
         <span class="rfp-label">Warranty:</span> ${rfp.description_structured.warranty}
-      </div>` : ""}
+      </div>`
+          : ""
+      }
 
-      ${rfp.created_at ? `
+      ${
+        rfp.created_at
+          ? `
       <div class="rfp-section">
-        <span class="rfp-label">Created At:</span> ${new Date(rfp.created_at).toLocaleString()}
-      </div>` : ""}
+        <span class="rfp-label">Created At:</span> ${new Date(
+          rfp.created_at
+        ).toLocaleString()}
+      </div>`
+          : ""
+      }
 
       <div class="footer">
         This email is automatically generated. Please respond to this RFP at your earliest convenience.
@@ -133,7 +196,6 @@ export const generateRfpEmailHtml = (rfp: RfpEmailData): string => {
     </html>
   `;
 };
-
 
 export const mapRfpToEmailData = (rfp: {
   rfp_id: string;

@@ -16,12 +16,6 @@ export const create = async ({ title, description_raw }: CreateRfpInput) => {
     );
   }
 
-  if (isEmptyResult(description_structured)) {
-    throw new UnprocessableEntity(
-      "Structured RFP generation failed — AI returned invalid JSON structure"
-    );
-  }
-
   const {
     budget = null,
     delivery_timeline = null,

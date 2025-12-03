@@ -27,7 +27,7 @@ export const rawVendorEmailSchema = z.object({
   from: z.email(),
   to: z.email(),
   subject: z.string().min(1),
-  text: z.string().optional(),
+  text: z.string(),
   html: z.string().optional(),
   attachments: z
     .array(
