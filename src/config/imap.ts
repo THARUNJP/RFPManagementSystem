@@ -8,7 +8,7 @@ const imapConfig = {
     port: 993,
     tls: true,
     authTimeout: 3000,
-    tlsOptions: { rejectUnauthorized: false }, // optional for dev self-signed certs
+    tlsOptions: { rejectUnauthorized: false }, // optional for dev self-signed certs/
   },
 };
 
