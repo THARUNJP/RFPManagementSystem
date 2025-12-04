@@ -51,7 +51,7 @@ export const getById = async (rfp_id: string) => {
   return rfp;
 };
 
-export const list = async (page = 1, limit = 20) => {
+export const list = async (page = 1, limit = 10) => {
   const skip = (page - 1) * limit;
 
   const rfps = await prisma.rfps.findMany({
@@ -67,7 +67,7 @@ export const list = async (page = 1, limit = 20) => {
     },
   });
 
-  return rfps;
+  return {data:rfps,total:rfps.length};
 };
 // Needs to implement batching later for performance
 export const send = async ({ rfp_id, vendor_ids }: SendRfpInput) => {

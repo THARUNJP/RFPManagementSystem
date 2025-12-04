@@ -55,12 +55,13 @@ export const listRfps = async (
   try {
     const { page = "1", limit = "10" } = listRfpsQuerySchema.parse(req.query);
 
-    const rfps = await RFPService.list(parseInt(page), parseInt(limit));
+    const {data,total} = await RFPService.list(parseInt(page), parseInt(limit));
 
     return res.status(200).json({
       status: true,
       message: "RFP list fetched successfully",
-      documents: rfps,
+      data,
+      total,
     });
   } catch (err) {
     next(err);
