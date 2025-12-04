@@ -24,7 +24,7 @@ const connectIMAP = async () => {
           if (bodyPart?.body) {
             const parsed = await simpleParser(bodyPart.body);
             console.log("New email received:", parsed.subject);
-            handleIncomingVendorEmail(parsed);
+            // handleIncomingVendorEmail(parsed);// zod error here need to fix it
           }
         }
       } catch (err) {

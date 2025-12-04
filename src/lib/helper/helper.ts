@@ -232,3 +232,23 @@ export const extractRfpUlid = (text: string): string | null => {
   const fallbackMatch = text.match(ulidRegex);
   return fallbackMatch ? fallbackMatch[0] : null;
 };
+
+
+export function extractEmail(address: any): string {
+  if (!address) return "";
+
+  // Case 1: AddressObject (has .text)
+  if ("text" in address && typeof address.text === "string") {
+    return address.text;
+  }
+
+  // Case 2: Array of AddressObject (parsed.to can be an array)
+  if (Array.isArray(address)) {
+    const texts = address
+      .map(a => (a.text ? a.text : ""))
+      .filter(Boolean);
+    return texts.join(", ");
+  }
+
+  return "";
+}
