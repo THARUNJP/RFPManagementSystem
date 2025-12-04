@@ -29,9 +29,9 @@ export async function listVendors(
   next: NextFunction
 ): Promise<Response | void> {
   try {
-    const { page = "1", limit = "10" } = listVendorQuerySchema.parse(req.query);
+    const { page = "1", limit = "10",search = ""} = listVendorQuerySchema.parse(req.query);
 
-    const {vendors:data,total} = await VendorService.list(parseInt(page), parseInt(limit));
+    const {vendors:data,total} = await VendorService.list(parseInt(page), parseInt(limit),search);
 
     return res.status(200).json({
       status: true,

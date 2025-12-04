@@ -22,6 +22,7 @@ export const vendorIdSchema = z.object({
 export const listVendorQuerySchema = z.object({
   page: z.string().optional(),
   limit: z.string().optional(),
+  search:z.string().optional()
 });
 export const rawVendorEmailSchema = z.object({
   from: z.email(),

@@ -25,19 +25,35 @@ export async function create({
   return vendor;
 }
 
-export async function list(page: number, limit: number) {
+export async function list(page: number, limit: number, search: string = "") {
   const skip = (page - 1) * limit;
 
+  const where: any = {
+    is_active: true,
+  };
+
+  // Add search condition only when search text exists
+  if (search.trim().length > 0) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { contact_email: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  // Fetch paginated + filtered vendors
   const vendors = await prisma.vendors.findMany({
-    where: { is_active: true },
+    where,
     skip,
     take: limit,
     orderBy: { created_at: "desc" },
   });
 
-  const total = await prisma.vendors.count()
+  // Count only filtered vendors
+  const total = await prisma.vendors.count({
+    where,
+  });
 
-  return {vendors,total};
+  return { vendors, total };
 }
 
 export async function update(vendor_id: string, payload: UpdateVendorInput) {
