@@ -35,7 +35,9 @@ export async function list(page: number, limit: number) {
     orderBy: { created_at: "desc" },
   });
 
-  return vendors;
+  const total = await prisma.vendors.count()
+
+  return {vendors,total};
 }
 
 export async function update(vendor_id: string, payload: UpdateVendorInput) {

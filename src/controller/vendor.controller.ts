@@ -31,12 +31,13 @@ export async function listVendors(
   try {
     const { page = "1", limit = "10" } = listVendorQuerySchema.parse(req.query);
 
-    const data = await VendorService.list(parseInt(page), parseInt(limit));
+    const {vendors:data,total} = await VendorService.list(parseInt(page), parseInt(limit));
 
     return res.status(200).json({
       status: true,
       message: "Vendors fetched successfully",
       data,
+      total
     });
   } catch (err) {
     next(err);

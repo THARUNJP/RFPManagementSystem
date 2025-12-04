@@ -71,7 +71,7 @@ export const list = async (page = 1, limit = 10) => {
 
   return {data:rfps,total};
 };
-// Needs to implement batching later for performance
+
 export const send = async ({ rfp_id, vendor_ids }: SendRfpInput) => {
   for (let i = 0; i < vendor_ids.length; i += BATCH_SIZE) {
     const batch = vendor_ids.slice(i, i + BATCH_SIZE);
