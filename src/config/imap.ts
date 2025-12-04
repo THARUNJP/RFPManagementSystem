@@ -9,6 +9,11 @@ const imapConfig = {
     tls: true,
     authTimeout: 3000,
     tlsOptions: { rejectUnauthorized: false }, // optional for dev self-signed certs/
+     keepalive: {
+      interval: 3000, // ping every 3s
+      idleInterval: 10000, 
+      forceNoop: true
+    }
   },
 };
 
