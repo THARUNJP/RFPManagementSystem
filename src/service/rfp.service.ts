@@ -67,7 +67,9 @@ export const list = async (page = 1, limit = 10) => {
     },
   });
 
-  return {data:rfps,total:rfps.length};
+  const total = await prisma.rfps.count()
+
+  return {data:rfps,total};
 };
 // Needs to implement batching later for performance
 export const send = async ({ rfp_id, vendor_ids }: SendRfpInput) => {
