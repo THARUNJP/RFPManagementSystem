@@ -157,7 +157,7 @@ export async function processEmail({
      // 6. Destructure LLM response
   const {
     total_price,
-    delivery_days,
+    delivery_timeline,
     payment_terms,
     warranty,
     completeness_score,
@@ -170,11 +170,11 @@ export async function processEmail({
       vendor_id: vendor.vendor_id,
       email_id: vendorEmail.email_id,
       parsed_proposal,
-      total_price: total_price ?? null,
-      delivery_days: delivery_days ?? null,
-      payment_terms: payment_terms ?? null,
-      warranty: warranty ?? null,
-      completeness_score: completeness_score ?? null,
+      total_price: total_price || null,
+      delivery_days: delivery_timeline || null,
+      payment_terms: payment_terms || null,
+      warranty: warranty ||  null,
+      completeness_score: completeness_score * 100 || null,
     },
   });
 
