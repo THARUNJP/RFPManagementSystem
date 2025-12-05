@@ -8,7 +8,7 @@ export async function SeedDatabase() {
   console.log("Seeding database...");
 
   // --------------------------------------
-  // 0. Cleanup in correct FK order
+  // 0. Cleanup in FK-safe order (NO TRANSACTION!)
   // --------------------------------------
   await prisma.comparisons.deleteMany();
   await prisma.proposals.deleteMany();
@@ -71,40 +71,32 @@ export async function SeedDatabase() {
   const allRfps = await prisma.rfps.findMany();
 
   // --------------------------------------
-  // 3. Seed RFP–Vendor linking
+  // 3. Link RFPs & Vendors
   // --------------------------------------
-  const rfpVendors = [];
+  const rfpVendors = allRfps.flatMap((rfp) =>
+    allVendors.map((vendor) => ({
+      rfp_id: rfp.rfp_id,
+      vendor_id: vendor.vendor_id,
+      email_status: EmailStatus.sent,
+      sent_at: new Date(),
+    }))
+  );
 
-  for (const rfp of allRfps) {
-    for (const vendor of allVendors) {
-      rfpVendors.push({
-        rfp_id: rfp.rfp_id,
-        vendor_id: vendor.vendor_id,
-        email_status: EmailStatus.sent,
-        sent_at: new Date()
-      });
-    }
-  }
-
-  await prisma.rfp_vendors.createMany({ data: rfpVendors, skipDuplicates: true });
+  await prisma.rfp_vendors.createMany({ data: rfpVendors });
 
   // --------------------------------------
   // 4. Seed Vendor Emails
   // --------------------------------------
-  const vendorEmails = [];
-
-  for (const rfp of allRfps) {
-    for (const vendor of allVendors) {
-      vendorEmails.push({
-        rfp_id: rfp.rfp_id,
-        vendor_id: vendor.vendor_id,
-        subject: `Proposal for ${rfp.title}`,
-        email_body_raw: `Dear Team,\nPlease find our proposal attached for ${rfp.title}.\nRegards,\n${vendor.name}`,
-        attachments: [],
-        received_at: new Date()
-      });
-    }
-  }
+  const vendorEmails = allRfps.flatMap((rfp) =>
+    allVendors.map((vendor) => ({
+      rfp_id: rfp.rfp_id,
+      vendor_id: vendor.vendor_id,
+      subject: `Proposal for ${rfp.title}`,
+      email_body_raw: `Dear Team,\nPlease find our proposal attached for ${rfp.title}.\nRegards,\n${vendor.name}`,
+      attachments: [],
+      received_at: new Date()
+    }))
+  );
 
   await prisma.vendor_emails.createMany({ data: vendorEmails });
   const allEmails = await prisma.vendor_emails.findMany();
@@ -112,28 +104,55 @@ export async function SeedDatabase() {
   // --------------------------------------
   // 5. Seed Proposals
   // --------------------------------------
-  const proposals = allEmails.map(email => ({
-    rfp_id: email.rfp_id,
-    vendor_id: email.vendor_id,
-    email_id: email.email_id,
-    parsed_proposal: {
-      items: [
-        { type: "Laptop", qty: 20, price: 1200 },
-        { type: "Monitor", qty: 15, price: 300 }
-      ],
-      total: 1200 * 20 + 300 * 15
-    },
-    total_price: 1200 * 20 + 300 * 15,
-    delivery_days: 25,
-    payment_terms: "Net 30",
-    warranty: "1 year",
-    completeness_score: Math.floor(Math.random() * 100)
-  }));
+  const proposals = allEmails.map(email => {
+    const items = [
+      {
+        type: "Laptop",
+        specs: "Core i5, 16GB RAM, 512GB SSD",
+        quantity: 20,
+        unit_price: 1200,
+        total_price: 20 * 1200,
+      },
+      {
+        type: "Monitor",
+        specs: "24-inch, 1080p",
+        quantity: 15,
+        unit_price: 300,
+        total_price: 15 * 300,
+      },
+    ];
+
+    const total_price = items.reduce((sum, item) => sum + item.total_price, 0);
+
+    return {
+      rfp_id: email.rfp_id,
+      vendor_id: email.vendor_id,
+      email_id: email.email_id,
+
+      parsed_proposal: {
+        items,
+        total_price,
+        budget: 50000,
+        delivery_timeline: "25 days",
+        payment_terms: "Net 30",
+        warranty: "1 year",
+        completeness_score: Math.floor(Math.random() * 100),
+      },
+
+      total_price,
+      delivery_days: 25,
+      payment_terms: "Net 30",
+      warranty: "1 year",
+      completeness_score: Math.floor(Math.random() * 100),
+    };
+  });
 
   await prisma.proposals.createMany({ data: proposals });
 
-  console.log("Seed complete.");
+  console.log("Seeding complete.");
 }
+
+
 
 
 

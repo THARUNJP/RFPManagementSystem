@@ -104,7 +104,8 @@ async function getRfpVendors(req: Request, res: Response, next: NextFunction) {
 async function getProposals(req: Request, res: Response, next: NextFunction) {
   try {
     const { rfp_id } = getProposalsParamsSchema.parse(req.params);
-
+    await RFPService.checkById(rfp_id);
+    
     const proposals = await RFPService.getProposals(rfp_id);
 
     return res.status(200).json({
@@ -140,5 +141,5 @@ export {
   listRfps,
   getRfpById,
   getProposals,
-  Status
+  Status,
 };
