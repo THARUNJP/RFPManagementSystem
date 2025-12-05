@@ -28,5 +28,10 @@ export const GetRfpVendorsParamsSchema = z.object({
   rfp_id: z.ulid()
 }).strict();
 
+export const getProposalsParamsSchema = z.object({
+  rfp_id: z.ulid(),
+}).strict();
+
+
 export type CreateRfpInput = z.infer<typeof CreateRfpSchema>;
 export type SendRfpInput = z.infer<typeof sendRfpParamsSchema> & z.infer<typeof sendRfpSchema>;

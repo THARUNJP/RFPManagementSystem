@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import * as RFPService from "../service/rfp.service";
 import {
+  getProposalsParamsSchema,
   getRfpParamsSchema,
   GetRfpVendorsParamsSchema,
   listRfpsQuerySchema,
@@ -27,11 +28,7 @@ async function createRfp(
   }
 }
 
-export const getRfpById = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const getRfpById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { rfp_id } = getRfpParamsSchema.parse(req.params);
 
@@ -47,15 +44,14 @@ export const getRfpById = async (
   }
 };
 
-export const listRfps = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const listRfps = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { page = "1", limit = "10" } = listRfpsQuerySchema.parse(req.query);
 
-    const {data,total} = await RFPService.list(parseInt(page), parseInt(limit));
+    const { data, total } = await RFPService.list(
+      parseInt(page),
+      parseInt(limit)
+    );
 
     return res.status(200).json({
       status: true,
@@ -68,15 +64,11 @@ export const listRfps = async (
   }
 };
 
-export const sendRfp = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const sendRfp = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { rfp_id } = sendRfpParamsSchema.parse(req.params);
     const { vendor_ids } = req.body;
-    
+
     await RFPService.checkById(rfp_id);
 
     res.status(202).json({
@@ -92,21 +84,43 @@ export const sendRfp = async (
   }
 };
 
-export async function getRfpVendors(req: Request, res: Response, next: NextFunction) {
+async function getRfpVendors(req: Request, res: Response, next: NextFunction) {
   try {
     const { rfp_id } = GetRfpVendorsParamsSchema.parse(req.params);
-  
+
     const data = await RFPService.getVendors(rfp_id);
 
     return res.status(200).json({
-       status: true,
-       rfp_id,
-       data
+      status: true,
+      rfp_id,
+      data,
     });
   } catch (err) {
     next(err);
   }
 }
 
+async function getProposals(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { rfp_id } = getProposalsParamsSchema.parse(req.params);
 
-export { createRfp };
+    const proposals = await RFPService.getProposals(rfp_id);
+
+    return res.status(200).json({
+      status: true,
+      message: "Proposals fetched successfully",
+      data: proposals,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export {
+  createRfp,
+  getRfpVendors,
+  sendRfp,
+  listRfps,
+  getRfpById,
+  getProposals,
+};

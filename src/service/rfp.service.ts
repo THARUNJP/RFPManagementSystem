@@ -151,3 +151,11 @@ export async function getVendors(rfp_id: string) {
   }));
 }
 
+export async function getProposals(rfp_id: string) {
+  const proposal = await prisma.proposals.findMany({
+    where:{rfp_id}
+  })
+
+  return proposal
+}
+
