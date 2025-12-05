@@ -1,7 +1,7 @@
 import { prisma } from "../config/prisma";
 import { BATCH_SIZE } from "../lib/constant/constant";
 import { NotFound, UnprocessableEntity } from "../lib/errors/httpError";
-import { buildRfpPrompt, isEmptyResult } from "../lib/helper/helper";
+import { buildRfpPrompt, flattenProposalResponse, isEmptyResult } from "../lib/helper/helper";
 import { Gemini } from "../llm/gemini.llm";
 import { CreateRfpInput, SendRfpInput } from "../validators/rfp.validator";
 import * as EmailService from "./email.service";
@@ -152,12 +152,23 @@ export async function getVendors(rfp_id: string) {
 }
 
 export async function getProposals(rfp_id: string) {
-  const proposal = await prisma.proposals.findMany({
-    where:{rfp_id}
-  })
+  const proposals = await prisma.proposals.findMany({
+    where: { rfp_id },
+    include: {
+      vendors: {
+        select: {
+          name: true,
+          contact_email: true,
+          phone: true,
+        },
+      },
+    },
+  });
 
-  return proposal
+  // Use helper to flatten vendor info
+  return flattenProposalResponse(proposals);
 }
+
 // add limit and offset if time exist
 export async function getVendorStatus(rfp_id: string) {
   const records = await prisma.rfp_vendors.findMany({

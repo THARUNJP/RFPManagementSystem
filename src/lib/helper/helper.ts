@@ -279,3 +279,31 @@ export function normalizeVendorEmail(parsed: any) {
   // Zod validation
   return normalized;
 }
+
+export function flattenProposalResponse(rawProposals: any[]) {
+  return rawProposals.map((p) => ({
+    proposal_id: p.proposal_id,
+    rfp_id: p.rfp_id,
+    vendor_id: p.vendor_id,
+    email_id: p.email_id,
+    // Flatten parsed_proposal fields
+    budget: p.parsed_proposal?.budget ?? null,
+    warranty: p.parsed_proposal?.warranty ?? null,
+    total_price: p.parsed_proposal?.total_price ?? null,
+    payment_terms: p.parsed_proposal?.payment_terms ?? null,
+    delivery_timeline: p.parsed_proposal?.delivery_timeline ?? null,
+    completeness_score: p.parsed_proposal?.completeness_score ?? null,
+    // Vendor info
+    vendor_name: p.vendor_name,
+    vendor_contact_email: p.vendor_contact_email,
+    vendor_phone: p.vendor_phone,
+    // Other proposal fields
+    created_at: p.created_at,
+    updated_at: p.updated_at,
+    is_active: p.is_active,
+    // Flatten items into a string summary (optional)
+    items_summary: p.parsed_proposal?.items
+      ?.map((item: any) => `${item.type} (${item.specs}) x ${item.quantity}`)
+      .join(", ") ?? "",
+  }));
+}

@@ -1,6 +1,10 @@
 import { prisma } from "../config/prisma";
 import { NotFound, UnprocessableEntity } from "../lib/errors/httpError";
-import { buildProposalPrompt, extractRfpUlid, isEmptyResult } from "../lib/helper/helper";
+import {
+  buildProposalPrompt,
+  extractRfpUlid,
+  isEmptyResult,
+} from "../lib/helper/helper";
 import { Gemini } from "../llm/gemini.llm";
 import {
   CreateVendorInput,
@@ -132,29 +136,28 @@ export async function processEmail({
   }
 
   // 4. Store raw email in vendor_emails table
-  const vendorEmail = await prisma.vendor_emails.create({
+  await prisma.vendor_emails.create({
     data: {
       rfp_id: rfpVendor.rfp_id,
       vendor_id: vendor.vendor_id,
       subject,
       email_body_raw: text || html || "",
-      attachments: attachments || [],// need to plan later for attachments
+      attachments: attachments || [], // need to plan later for attachments
       received_at: new Date(),
     },
   });
 
-
   const prompt = buildProposalPrompt(text);
- 
+
   const parsed_proposal = await Gemini(prompt);
 
-   if (isEmptyResult(parsed_proposal)) {
-     throw new UnprocessableEntity(
-       "Structured RFP generation failed — AI returned empty result"
-     );
-   }
+  if (isEmptyResult(parsed_proposal)) {
+    throw new UnprocessableEntity(
+      "Structured RFP generation failed — AI returned empty result"
+    );
+  }
 
-     // 6. Destructure LLM response
+  // 6. Destructure LLM response
   const {
     total_price,
     delivery_timeline,
@@ -168,17 +171,15 @@ export async function processEmail({
     data: {
       rfp_id: rfpVendor.rfp_id,
       vendor_id: vendor.vendor_id,
-      email_id: vendorEmail.email_id,
+      email_id: from,
       parsed_proposal,
       total_price: total_price || null,
       delivery_days: delivery_timeline || null,
       payment_terms: payment_terms || null,
-      warranty: warranty ||  null,
+      warranty: warranty || null,
       completeness_score: completeness_score * 100 || null,
     },
   });
-
-  
 
   console.log(`Processed email from ${from} for RFP Vendor ID: ${rfpVendorId}`);
 }
