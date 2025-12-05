@@ -4,6 +4,7 @@ import {
   getProposalsParamsSchema,
   getRfpParamsSchema,
   GetRfpVendorsParamsSchema,
+  getVendorStatusParamsSchema,
   listRfpsQuerySchema,
   sendRfpParamsSchema,
 } from "../validators/rfp.validator";
@@ -116,6 +117,22 @@ async function getProposals(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+async function Status(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { rfp_id } = getVendorStatusParamsSchema.parse(req.params);
+
+    const proposals = await RFPService.getVendorStatus(rfp_id);
+
+    return res.status(200).json({
+      status: true,
+      message: "Proposals fetched successfully",
+      data: proposals,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export {
   createRfp,
   getRfpVendors,
@@ -123,4 +140,5 @@ export {
   listRfps,
   getRfpById,
   getProposals,
+  Status
 };

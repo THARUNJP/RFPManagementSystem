@@ -158,4 +158,30 @@ export async function getProposals(rfp_id: string) {
 
   return proposal
 }
+// add limit and offset if time exist
+export async function getVendorStatus(rfp_id: string) {
+  const records = await prisma.rfp_vendors.findMany({
+    where: { rfp_id },
+    include: {
+      vendors: {
+        select: {
+          name: true,
+          contact_email: true,
+          phone: true
+        }
+      }
+    }
+  });
+
+  // Flatten the structure
+  return records.map((rec) => ({
+    ...rec,
+    name: rec.vendors?.name || null,
+    contact_email: rec.vendors?.contact_email || null,
+    phone: rec.vendors?.phone || null,
+    vendors: undefined, // remove nested object
+  }));
+}
+
+
 
