@@ -165,14 +165,10 @@ export async function getProposals(rfp_id: string) {
     },
   });
 
-  if (proposals.length === 0) throw new NotFound("No proposals found for this RFP");
-  
-console.log(proposals);
 
   // Use helper to flatten vendor info
   return flattenProposalResponse(proposals);
 }
-
 // add limit and offset if time exist
 export async function getVendorStatus(rfp_id: string) {
   const records = await prisma.rfp_vendors.findMany({

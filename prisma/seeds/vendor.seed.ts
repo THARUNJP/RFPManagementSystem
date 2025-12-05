@@ -153,8 +153,5 @@ export async function SeedDatabase() {
 }
 
 
-
-
-
 SeedDatabase().finally(() => prisma.$disconnect());
 
