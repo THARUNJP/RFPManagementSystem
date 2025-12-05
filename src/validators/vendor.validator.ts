@@ -37,7 +37,7 @@ export const rawVendorEmailSchema = z.object({
         content: z.instanceof(Buffer), // raw file content
       })
     )
-    .optional(),
+    .optional().nullable(),
 });
 
 

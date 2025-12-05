@@ -2,6 +2,7 @@ import imaps from "imap-simple";
 import { simpleParser } from "mailparser";
 import imapConfig from "../config/imap";
 import { handleIncomingVendorEmail } from "../controller/vendor.controller";
+import { normalizeVendorEmail } from "../lib/helper/helper";
 
 let connection: any = null;
 
@@ -24,7 +25,9 @@ const connectIMAP = async () => {
           if (bodyPart?.body) {
             const parsed = await simpleParser(bodyPart.body);
             console.log("New email received:", parsed.subject);
-            // handleIncomingVendorEmail(parsed);// zod error here need to fix it
+            const validatedEmail = normalizeVendorEmail(parsed)     
+
+            handleIncomingVendorEmail(validatedEmail);// zod error here need to fix it
           }
         }
       } catch (err) {
@@ -33,7 +36,7 @@ const connectIMAP = async () => {
     });
 
     // Reconnect on error or end
-    connection.on("error", (err:unknown) => {
+    connection.on("error", (err: unknown) => {
       console.error("IMAP error:", err);
       reconnectIMAP();
     });

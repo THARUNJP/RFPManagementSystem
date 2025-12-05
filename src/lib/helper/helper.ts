@@ -222,33 +222,60 @@ export const mapRfpToEmailData = (rfp: {
 export const extractRfpUlid = (text: string): string | null => {
   if (!text) return null;
 
-  // Step 1: Try exact "RFP Link ID: <ULID>" format
-  const prefixedRegex = /RFP Link ID:\s*([0-7A-Z]{26})/i;
+  // Correct ULID character set
+  const ulidPattern = "[0-9A-HJKMNP-TV-Z]{26}";
+
+  // Step 1: The exact "RFP Link ID: <ULID>" format
+  const prefixedRegex = new RegExp(`RFP Link ID:\\s*(${ulidPattern})`, "i");
   const prefixedMatch = text.match(prefixedRegex);
   if (prefixedMatch) return prefixedMatch[1];
 
-  // Step 2: Fallback: scan for any 26-character ULID
-  const ulidRegex = /[0-7A-Z]{26}/g;
-  const fallbackMatch = text.match(ulidRegex);
+  // Step 2: Fallback: scan for any ULID in the subject
+  const fallbackRegex = new RegExp(ulidPattern, "g");
+  const fallbackMatch = text.match(fallbackRegex);
   return fallbackMatch ? fallbackMatch[0] : null;
 };
 
+export function normalizeVendorEmail(parsed: any) {
+  // Extract email from mailparser AddressObject or array
+  const extractEmail = (addr: any): string => {
+    if (!addr) return "";
 
-export function extractEmail(address: any): string {
-  if (!address) return "";
+    // Case 1: addr.text = '"Name" <email>'
+    if (typeof addr.text === "string") {
+      const match = addr.text.match(/<(.+?)>/);
+      if (match) return match[1]; // extract inside <>
+      return addr.text.trim();
+    }
 
-  // Case 1: AddressObject (has .text)
-  if ("text" in address && typeof address.text === "string") {
-    return address.text;
-  }
+    // Case 2: addr.value = [ { address, name } ]
+    if (Array.isArray(addr.value) && addr.value.length > 0) {
+      return addr.value[0].address || "";
+    }
 
-  // Case 2: Array of AddressObject (parsed.to can be an array)
-  if (Array.isArray(address)) {
-    const texts = address
-      .map(a => (a.text ? a.text : ""))
-      .filter(Boolean);
-    return texts.join(", ");
-  }
+    return "";
+  };
 
-  return "";
+  // Normalize attachments to match schema
+  const normalizeAttachments = (attachments: any[] | undefined) => {
+    if (!attachments || attachments.length === 0) return undefined;
+
+    return attachments.map((a) => ({
+      fileName: a.filename,
+      content: a.content,
+    }));
+  };
+
+  // Final normalized object
+  const normalized = {
+    from: extractEmail(parsed.from),
+    to: extractEmail(parsed.to),
+    subject: parsed.subject,
+    text: parsed.text,
+    html: parsed.html,
+    attachments: normalizeAttachments(parsed.attachments) || null,
+  };
+
+  // Zod validation
+  return normalized;
 }
