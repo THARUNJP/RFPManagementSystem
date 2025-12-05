@@ -294,9 +294,9 @@ export function flattenProposalResponse(rawProposals: any[]) {
     delivery_timeline: p.parsed_proposal?.delivery_timeline ?? null,
     completeness_score: p.parsed_proposal?.completeness_score ?? null,
     // Vendor info
-    vendor_name: p.vendor_name,
-    vendor_contact_email: p.vendor_contact_email,
-    vendor_phone: p.vendor_phone,
+    vendor_name: p.vendors.name,
+    vendor_contact_email: p.vendors.contact_email,
+    vendor_phone: p.vendors.phone,
     // Other proposal fields
     created_at: p.created_at,
     updated_at: p.updated_at,
