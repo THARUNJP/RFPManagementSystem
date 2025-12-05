@@ -1,10 +1,10 @@
 // prisma/seed.ts
 
 import "dotenv/config"
-import { seedVendors } from "./seeds/vendor.seed";
+import { SeedDatabase } from "./seeds/vendor.seed";
 
 async function main() {
-  await seedVendors();
+  await SeedDatabase();
 }
 
 main()
