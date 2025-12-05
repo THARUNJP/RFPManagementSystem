@@ -133,20 +133,20 @@ import { prisma } from "../../src/config/prisma";
   // -----------------------------
   // 6. Seed Comparisons (AI Recommendation)
   // -----------------------------
-  const comparisons = allRfps.map(rfp => {
-    const vendor = allVendors[Math.floor(Math.random() * allVendors.length)];
-    return {
-      rfp_id: rfp.rfp_id,
-      recommended_vendor_id: vendor.vendor_id,
-      result_json: {
-        recommended_vendor: vendor.name,
-        reasoning: "Best price–value ratio with highest completeness score."
-      },
-      generated_at: new Date()
-    };
-  });
+  // const comparisons = allRfps.map(rfp => {
+  //   const vendor = allVendors[Math.floor(Math.random() * allVendors.length)];
+  //   return {
+  //     rfp_id: rfp.rfp_id,
+  //     recommended_vendor_id: vendor.vendor_id,
+  //     result_json: {
+  //       recommended_vendor: vendor.name,
+  //       reasoning: "Best price–value ratio with highest completeness score."
+  //     },
+  //     generated_at: new Date()
+  //   };
+  // });
 
-  await prisma.comparisons.createMany({ data: comparisons });
+  // await prisma.comparisons.createMany({ data: comparisons });
 
   console.log(" Seed complete");
 }
