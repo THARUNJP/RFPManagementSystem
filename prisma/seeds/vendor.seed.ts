@@ -4,12 +4,22 @@ import { EmailStatus } from "@prisma/client";
 import { prisma } from "../../src/config/prisma";
 
 
- export async function SeedDatabase() {
-  console.log(" Seeding database...");
+export async function SeedDatabase() {
+  console.log("Seeding database...");
 
-  // -----------------------------
+  // --------------------------------------
+  // 0. Cleanup in correct FK order
+  // --------------------------------------
+  await prisma.comparisons.deleteMany();
+  await prisma.proposals.deleteMany();
+  await prisma.vendor_emails.deleteMany();
+  await prisma.rfp_vendors.deleteMany();
+  await prisma.rfps.deleteMany();
+  await prisma.vendors.deleteMany();
+
+  // --------------------------------------
   // 1. Seed Vendors
-  // -----------------------------
+  // --------------------------------------
   const vendors = [
     { name: "Tech Supplies Global", contact_email: "contact@tsglobal.com", phone: "9876543210" },
     { name: "Digital Depot Solutions", contact_email: "info@digitaldepot.com", phone: "9123456780" },
@@ -21,13 +31,11 @@ import { prisma } from "../../src/config/prisma";
   ];
 
   await prisma.vendors.createMany({ data: vendors });
-
   const allVendors = await prisma.vendors.findMany();
 
-
-  // -----------------------------
+  // --------------------------------------
   // 2. Seed RFPs
-  // -----------------------------
+  // --------------------------------------
   const rfps = [
     {
       title: "Procurement of Laptops & Monitors",
@@ -35,7 +43,7 @@ import { prisma } from "../../src/config/prisma";
       description_structured: {
         items: [
           { type: "Laptop", qty: 20, specs: "10GB RAM, 512GB SSD" },
-          { type: "Monitor", qty: 15, specs: "27-inch IPS" },
+          { type: "Monitor", qty: 15, specs: "27-inch IPS" }
         ],
       },
       budget: 50000,
@@ -49,24 +57,22 @@ import { prisma } from "../../src/config/prisma";
       description_structured: {
         items: [
           { type: "Switch", qty: 10, specs: "24-port Gigabit" },
-          { type: "Router", qty: 5, specs: "Dual-band enterprise" },
+          { type: "Router", qty: 5, specs: "Dual-band enterprise" }
         ],
       },
       budget: 30000,
       delivery_timeline: "20 days",
       payment_terms: "Net 15",
       warranty: "2 years"
-    },
+    }
   ];
 
   await prisma.rfps.createMany({ data: rfps });
-
   const allRfps = await prisma.rfps.findMany();
 
-
-  // -----------------------------
-  // 3. Seed RFP–Vendor Linking
-  // -----------------------------
+  // --------------------------------------
+  // 3. Seed RFP–Vendor linking
+  // --------------------------------------
   const rfpVendors = [];
 
   for (const rfp of allRfps) {
@@ -74,18 +80,17 @@ import { prisma } from "../../src/config/prisma";
       rfpVendors.push({
         rfp_id: rfp.rfp_id,
         vendor_id: vendor.vendor_id,
-        email_status:EmailStatus.sent,
-        sent_at: new Date(),
+        email_status: EmailStatus.sent,
+        sent_at: new Date()
       });
     }
   }
 
-  await prisma.rfp_vendors.createMany({ data: rfpVendors });
+  await prisma.rfp_vendors.createMany({ data: rfpVendors, skipDuplicates: true });
 
-
-  // -----------------------------
+  // --------------------------------------
   // 4. Seed Vendor Emails
-  // -----------------------------
+  // --------------------------------------
   const vendorEmails = [];
 
   for (const rfp of allRfps) {
@@ -102,13 +107,11 @@ import { prisma } from "../../src/config/prisma";
   }
 
   await prisma.vendor_emails.createMany({ data: vendorEmails });
-
   const allEmails = await prisma.vendor_emails.findMany();
 
-
-  // -----------------------------
+  // --------------------------------------
   // 5. Seed Proposals
-  // -----------------------------
+  // --------------------------------------
   const proposals = allEmails.map(email => ({
     rfp_id: email.rfp_id,
     vendor_id: email.vendor_id,
@@ -129,27 +132,10 @@ import { prisma } from "../../src/config/prisma";
 
   await prisma.proposals.createMany({ data: proposals });
 
-
-  // -----------------------------
-  // 6. Seed Comparisons (AI Recommendation)
-  // -----------------------------
-  // const comparisons = allRfps.map(rfp => {
-  //   const vendor = allVendors[Math.floor(Math.random() * allVendors.length)];
-  //   return {
-  //     rfp_id: rfp.rfp_id,
-  //     recommended_vendor_id: vendor.vendor_id,
-  //     result_json: {
-  //       recommended_vendor: vendor.name,
-  //       reasoning: "Best price–value ratio with highest completeness score."
-  //     },
-  //     generated_at: new Date()
-  //   };
-  // });
-
-  // await prisma.comparisons.createMany({ data: comparisons });
-
-  console.log(" Seed complete");
+  console.log("Seed complete.");
 }
+
+
 
 SeedDatabase().finally(() => prisma.$disconnect());
 
