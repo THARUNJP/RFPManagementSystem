@@ -101,7 +101,7 @@ export async function getById(vendor_id: string) {
 
   return vendor;
 }
-
+// need to change
 export async function processEmail({
   from,
   subject,
@@ -136,7 +136,7 @@ export async function processEmail({
   }
 
   // 4. Store raw email in vendor_emails table
-  await prisma.vendor_emails.create({
+  const vendorEmail = await prisma.vendor_emails.create({
     data: {
       rfp_id: rfpVendor.rfp_id,
       vendor_id: vendor.vendor_id,
@@ -174,7 +174,7 @@ export async function processEmail({
     data: {
       rfp_id: rfpVendor.rfp_id,
       vendor_id: vendor.vendor_id,
-      email_id: from,
+      email_id: vendorEmail.email_id,
       parsed_proposal,
       total_price: total_price || null,
       delivery_days: deliveryDaysInt,
