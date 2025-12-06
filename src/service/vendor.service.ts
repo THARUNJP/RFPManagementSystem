@@ -180,7 +180,7 @@ export async function processEmail({
       delivery_days: deliveryDaysInt,
       payment_terms: payment_terms || null,
       warranty: warranty || null,
-      completeness_score: completeness_score * 100 || null,
+      completeness_score: completeness_score * 100 || 0,
     },
   });
 

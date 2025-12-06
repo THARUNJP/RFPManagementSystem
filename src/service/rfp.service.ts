@@ -234,22 +234,6 @@ export async function comparisonNotExist(rfp_id: string) {
     const ai = await Gemini(prompt); // Must return JSON
 
     if (!ai?.batch_best) continue;
-
-    // Save all scores in this batch
-    if (Array.isArray(ai.all_scores)) {
-      for (const result of ai.all_scores) {
-        await prisma.comparisons.create({
-          data: {
-            rfp_id,
-            result_json: result,
-            recommended_vendor_id: result.vendor_id || null,
-            generated_at: new Date(),
-          },
-        });
-      }
-    }
-
-    // Collect winner of this batch for final round
     batchWinners.push(ai.batch_best);
   }
 
@@ -272,10 +256,32 @@ export async function comparisonNotExist(rfp_id: string) {
       "Request was valid, but no proposals could satisfy the requirements"
     );
 
+ const winningProposal = await prisma.proposals.findUnique({
+    where: {
+      proposal_id: bestProposalId,
+    },
+    include: {
+      vendors: true, // JOIN to vendor details
+    },
+  });
+
+  if (!winningProposal) {
+    throw new NotFound("Winner proposal not found in DB");
+  }
+
+  const vendor = winningProposal.vendors;
+
+  // 7. Return final response
   return {
     message: "Comparison completed",
     best_proposal_id: bestProposalId,
     reason: finalResult?.reason,
+    vendor: {
+      vendor_id: vendor.vendor_id,
+      name: vendor.name,
+      email: vendor.contact_email,
+      phone: vendor.phone,
+    },
   };
 }
 

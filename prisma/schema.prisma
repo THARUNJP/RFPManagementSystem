@@ -25,8 +25,7 @@ model vendors {
   rfp_vendors     rfp_vendors[]
   vendor_emails   vendor_emails[]
   proposals       proposals[]
-  comparisons     comparisons[]
-}
+  }
 
 model rfps {
   rfp_id                String        @id @default(ulid())
@@ -101,19 +100,20 @@ model proposals {
   rfps          rfps          @relation(fields: [rfp_id], references: [rfp_id])
   vendors       vendors       @relation(fields: [vendor_id], references: [vendor_id])
   vendor_email  vendor_emails @relation(fields: [email_id], references: [email_id])
+  comparisons   comparisons[]
 }
 
 model comparisons {
   comparison_id         String   @id @default(ulid())
   rfp_id                String
   result_json           Json?
-  recommended_vendor_id String
+  recommended_proposal_id String
   generated_at          DateTime @updatedAt
   created_at            DateTime @default(now())
   is_active             Boolean  @default(true)
 
   // Relations
   rfps    rfps    @relation(fields: [rfp_id], references: [rfp_id])
-  vendors vendors @relation(fields: [recommended_vendor_id], references: [vendor_id])
+  proposals proposals @relation(fields: [recommended_proposal_id], references: [proposal_id])
 }
 
