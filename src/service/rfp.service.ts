@@ -194,5 +194,25 @@ export async function getVendorStatus(rfp_id: string) {
   }));
 }
 
+export async function getAiRecommendation(rfp_id: string) {
+
+  const comparison = await prisma.comparisons.findFirst({
+    where:{rfp_id},
+  })
+
+  if(!comparison){
+  // const recomendation
+  }
+  else{
+
+  }
+//   const comparison = await prisma.comparisons.findFirst({
+//     where:{rfp_id}
+//   })
+// if(!comparison) // then fetch all proposal and compare one by one with the rfp to find the best proposal
+// else // we need to fetch only the proposal that are created > updated at o fcomparison and if no propsal created after the latest updated at return the current comparison directly
+// // finally return the updated comparison
+}
+
 
 

@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import * as RFPService from "../service/rfp.service";
 import {
+  getAiRecommendationParamsSchema,
   getProposalsParamsSchema,
   getRfpParamsSchema,
   GetRfpVendorsParamsSchema,
@@ -29,7 +30,11 @@ async function createRfp(
   }
 }
 
-const getRfpById = async (req: Request, res: Response, next: NextFunction) => {
+const getRfpById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   try {
     const { rfp_id } = getRfpParamsSchema.parse(req.params);
 
@@ -45,7 +50,11 @@ const getRfpById = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const listRfps = async (req: Request, res: Response, next: NextFunction) => {
+const listRfps = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   try {
     const { page = "1", limit = "10" } = listRfpsQuerySchema.parse(req.query);
 
@@ -65,7 +74,11 @@ const listRfps = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const sendRfp = async (req: Request, res: Response, next: NextFunction) => {
+const sendRfp = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   try {
     const { rfp_id } = sendRfpParamsSchema.parse(req.params);
     const { vendor_ids } = req.body;
@@ -85,7 +98,11 @@ const sendRfp = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-async function getRfpVendors(req: Request, res: Response, next: NextFunction) {
+async function getRfpVendors(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> {
   try {
     const { rfp_id } = GetRfpVendorsParamsSchema.parse(req.params);
 
@@ -101,11 +118,15 @@ async function getRfpVendors(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-async function getProposals(req: Request, res: Response, next: NextFunction) {
+async function getProposals(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> {
   try {
     const { rfp_id } = getProposalsParamsSchema.parse(req.params);
     await RFPService.checkById(rfp_id);
-    
+
     const proposals = await RFPService.getProposals(rfp_id);
 
     return res.status(200).json({
@@ -118,7 +139,11 @@ async function getProposals(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-async function Status(req: Request, res: Response, next: NextFunction) {
+async function Status(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> {
   try {
     const { rfp_id } = getVendorStatusParamsSchema.parse(req.params);
 
@@ -134,6 +159,28 @@ async function Status(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+async function getAiRecommendations(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { rfp_id } = getAiRecommendationParamsSchema.parse(req.params);
+
+    await RFPService.checkById(rfp_id);
+
+    const recomendation = await RFPService.getAiRecommendation(rfp_id)
+
+    return res.status(200).json({
+      status: true,
+      message: "AI based recomendation, kindly make sure to go through the recommendation before proceeding",
+      recomendation
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export {
   createRfp,
   getRfpVendors,
@@ -142,4 +189,5 @@ export {
   getRfpById,
   getProposals,
   Status,
+  getAiRecommendations,
 };

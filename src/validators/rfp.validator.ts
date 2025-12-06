@@ -36,6 +36,10 @@ export const getVendorStatusParamsSchema = z.object({
   rfp_id: z.ulid(),
 }).strict();
 
+export const getAiRecommendationParamsSchema = z.object({
+  rfp_id: z.ulid(),
+}).strict();
+
 
 
 export type CreateRfpInput = z.infer<typeof CreateRfpSchema>;
