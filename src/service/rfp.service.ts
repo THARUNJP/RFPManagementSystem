@@ -247,7 +247,7 @@ export async function comparisonNotExist(rfp_id: string) {
     data: {
       rfp_id,
       result_json: finalResult,
-      recommended_vendor_id: bestProposalId || null,
+      recommended_proposal_id: bestProposalId || null,
     },
   });
 
@@ -321,7 +321,7 @@ export async function comparisonExist(rfp_id: string, comparison: comparisons) {
           data: {
             rfp_id,
             result_json: result,
-            recommended_vendor_id: result.vendor_id || null,
+            recommended_proposal_id: result.vendor_id || null,
             generated_at: new Date(),
           },
         });
@@ -346,7 +346,7 @@ export async function comparisonExist(rfp_id: string, comparison: comparisons) {
     data: {
       rfp_id: bestProposalId, // optional if not changing
       result_json: finalResult,
-      recommended_vendor_id: bestProposalId,
+      recommended_proposal_id: bestProposalId,
     },
   });
 
