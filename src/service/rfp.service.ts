@@ -246,7 +246,7 @@ export async function comparisonNotExist(rfp_id: string) {
   await prisma.comparisons.create({
     data: {
       rfp_id,
-      result_json: finalResult,
+      result_json: finalResult?.reason,
       recommended_proposal_id: bestProposalId || null,
     },
   });
@@ -286,73 +286,101 @@ export async function comparisonNotExist(rfp_id: string) {
 }
 
 export async function comparisonExist(rfp_id: string, comparison: comparisons) {
-
+  // Fetch proposals created AFTER previous comparison time
   const proposals = await prisma.proposals.findMany({
     where: {
       rfp_id,
-      created_at: {
-        gt: comparison.generated_at,
-      },
+      created_at: { gt: comparison.generated_at },
     },
   });
 
+  // If no new proposals → return the old winner
+  if (proposals.length === 0) {
+    if (!comparison?.recommended_proposal_id) {
+      throw new UnprocessableEntity(
+        "Request was valid, but no proposals could satisfy the requirements"
+      );
+    }
+
+    const proposal = await prisma.proposals.findUnique({
+      where: { proposal_id: comparison.recommended_proposal_id },
+      include: { vendors: true },
+    });
+
+    if (!proposal) {
+      throw new NotFound("Winner proposal not found in DB");
+    }
+
+    const vendor = proposal.vendors;
+
+    return {
+      message: "Comparison completed",
+      best_proposal_id: comparison.recommended_proposal_id,
+      reason: comparison.result_json,
+      vendor: {
+        vendor_id: vendor.vendor_id,
+        name: vendor.name,
+        email: vendor.contact_email,
+        phone: vendor.phone,
+      },
+    };
+  }
+
+  // New proposals found → run comparison again
   const rfp = await prisma.rfps.findUnique({
     where: { rfp_id },
   });
 
-  if (proposals.length === 0) {
-    return comparison; // need to return proper formatted resp later
-  }
-
   const batches = chunkArray(proposals, 10);
-
   const batchWinners: any[] = [];
 
   for (const batch of batches) {
     const prompt = buildBatchComparisonPrompt(rfp, batch);
-    const ai = await Gemini(prompt); // Must return JSON
+    const ai = await Gemini(prompt);
 
     if (!ai?.batch_best) continue;
-
-    // Save all scores in this batch
-    if (Array.isArray(ai.all_scores)) {
-      for (const result of ai.all_scores) {
-        await prisma.comparisons.create({
-          data: {
-            rfp_id,
-            result_json: result,
-            recommended_proposal_id: result.vendor_id || null,
-            generated_at: new Date(),
-          },
-        });
-      }
-    }
-
-    // Collect winner of this batch for final round
+    
     batchWinners.push(ai.batch_best);
   }
 
+  // Final selection from all batch winners
   const finalPrompt = buildFinalSelectionPrompt(batchWinners);
   const finalResult = await Gemini(finalPrompt);
-
   const bestProposalId = finalResult?.best_proposal_id;
-  //  Store the final best proposal selection
-  console.log(finalResult, "??");
 
+  // Update the existing comparison record
   await prisma.comparisons.update({
-    where: {
-      comparison_id: comparison.comparison_id, // REQUIRED
-    },
+    where: { comparison_id: comparison.comparison_id },
     data: {
-      rfp_id: bestProposalId, // optional if not changing
+      rfp_id,
       result_json: finalResult,
       recommended_proposal_id: bestProposalId,
     },
   });
 
+  // Fetch winning proposal + vendor details
+  const finalProposal = await prisma.proposals.findUnique({
+    where: { proposal_id: bestProposalId },
+    include: { vendors: true },
+  });
+
+  if (!finalProposal) {
+    throw new NotFound("Winner proposal not found in DB");
+  }
+
+  const vendor = finalProposal.vendors;
+
   return {
     message: "Comparison completed",
     best_proposal_id: bestProposalId,
     reason: finalResult?.reason,
+    vendor: {
+      vendor_id: vendor.vendor_id,
+      name: vendor.name,
+      email: vendor.contact_email,
+      phone: vendor.phone,
+    },
   };
 }
+
+
