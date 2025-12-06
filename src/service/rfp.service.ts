@@ -1,7 +1,15 @@
+import { comparisons } from "@prisma/client";
 import { prisma } from "../config/prisma";
 import { BATCH_SIZE } from "../lib/constant/constant";
 import { NotFound, UnprocessableEntity } from "../lib/errors/httpError";
-import { buildRfpPrompt, flattenProposalResponse, isEmptyResult } from "../lib/helper/helper";
+import {
+  buildBatchComparisonPrompt,
+  buildFinalSelectionPrompt,
+  buildRfpPrompt,
+  chunkArray,
+  flattenProposalResponse,
+  isEmptyResult,
+} from "../lib/helper/helper";
 import { Gemini } from "../llm/gemini.llm";
 import { CreateRfpInput, SendRfpInput } from "../validators/rfp.validator";
 import * as EmailService from "./email.service";
@@ -67,9 +75,9 @@ export const list = async (page = 1, limit = 10) => {
     },
   });
 
-  const total = await prisma.rfps.count()
+  const total = await prisma.rfps.count();
 
-  return {data:rfps,total};
+  return { data: rfps, total };
 };
 
 export const send = async ({ rfp_id, vendor_ids }: SendRfpInput) => {
@@ -88,7 +96,7 @@ export const send = async ({ rfp_id, vendor_ids }: SendRfpInput) => {
           });
 
           // Send email
-          await EmailService.sendVendor(rfp_id, vendor_id,record.id);
+          await EmailService.sendVendor(rfp_id, vendor_id, record.id);
 
           // Mark as sent
           await prisma.rfp_vendors.update({
@@ -121,7 +129,7 @@ export const checkById = async (rfp_id: string): Promise<void> => {
 export async function getVendors(rfp_id: string) {
   // Verify RFP exists & active
   const rfp = await prisma.rfps.findFirst({
-    where: { rfp_id, is_active: true }
+    where: { rfp_id, is_active: true },
   });
 
   if (!rfp) {
@@ -137,17 +145,16 @@ export async function getVendors(rfp_id: string) {
       vendors: {
         select: {
           name: true,
-          contact_email:true,
-          
-        }
-      }
-    }
+          contact_email: true,
+        },
+      },
+    },
   });
 
-  return records.map(r => ({
+  return records.map((r) => ({
     vendor_id: r.vendor_id,
     name: r.vendors.name,
-    email_status: r.email_status
+    email_status: r.email_status,
   }));
 }
 
@@ -165,7 +172,6 @@ export async function getProposals(rfp_id: string) {
     },
   });
 
-
   // Use helper to flatten vendor info
   return flattenProposalResponse(proposals);
 }
@@ -178,10 +184,10 @@ export async function getVendorStatus(rfp_id: string) {
         select: {
           name: true,
           contact_email: true,
-          phone: true
-        }
-      }
-    }
+          phone: true,
+        },
+      },
+    },
   });
 
   // Flatten the structure
@@ -195,24 +201,143 @@ export async function getVendorStatus(rfp_id: string) {
 }
 
 export async function getAiRecommendation(rfp_id: string) {
-
   const comparison = await prisma.comparisons.findFirst({
-    where:{rfp_id},
-  })
+    where: { rfp_id },
+    orderBy: { generated_at: "desc" },
+  });
 
-  if(!comparison){
-  // const recomendation
+  if (!comparison) {
+    return await comparisonNotExist(rfp_id);
   }
-  else{
 
-  }
-//   const comparison = await prisma.comparisons.findFirst({
-//     where:{rfp_id}
-//   })
-// if(!comparison) // then fetch all proposal and compare one by one with the rfp to find the best proposal
-// else // we need to fetch only the proposal that are created > updated at o fcomparison and if no propsal created after the latest updated at return the current comparison directly
-// // finally return the updated comparison
+  return await comparisonExist(rfp_id, comparison);
 }
 
+export async function comparisonNotExist(rfp_id: string) {
+  const proposals = await prisma.proposals.findMany({
+    where: { rfp_id },
+  });
 
+  const rfp = await prisma.rfps.findUnique({
+    where: { rfp_id },
+  });
 
+  if (proposals.length === 0) {
+    throw new NotFound("Proposals not found for RFP");
+  }
+
+  const batches = chunkArray(proposals, 10);
+
+  const batchWinners: any[] = [];
+
+  for (const batch of batches) {
+    const prompt = buildBatchComparisonPrompt(rfp, batch);
+    const ai = await Gemini(prompt); // Must return JSON
+
+    if (!ai?.batch_best) continue;
+
+    // Save all scores in this batch
+    if (Array.isArray(ai.all_scores)) {
+      for (const result of ai.all_scores) {
+        await prisma.comparisons.create({
+          data: {
+            rfp_id,
+            result_json: result,
+            recommended_vendor_id: result.vendor_id || null,
+            generated_at: new Date(),
+          },
+        });
+      }
+    }
+
+    // Collect winner of this batch for final round
+    batchWinners.push(ai.batch_best);
+  }
+
+  const finalPrompt = buildFinalSelectionPrompt(batchWinners);
+  const finalResult = await Gemini(finalPrompt);
+
+  const bestProposalId = finalResult?.best_proposal_id;
+
+  //  Store the final best proposal selection
+  await prisma.comparisons.create({
+    data: {
+      rfp_id,
+      result_json: finalResult,
+      recommended_vendor_id: bestProposalId,
+    },
+  });
+
+  return {
+    message: "Comparison completed",
+    best_proposal_id: bestProposalId,
+    reason: finalResult?.reason,
+  };
+}
+
+export async function comparisonExist(rfp_id: string, comparison: comparisons) {
+  const proposals = await prisma.proposals.findMany({
+    where: {
+      rfp_id,
+      created_at: {
+        gt: comparison.generated_at,
+      },
+    },
+  });
+
+  const rfp = await prisma.rfps.findUnique({
+    where: { rfp_id },
+  });
+
+  if (proposals.length === 0) {
+    return comparison; // need to return proper formatted resp later
+  }
+
+  const batches = chunkArray(proposals, 10);
+
+  const batchWinners: any[] = [];
+
+  for (const batch of batches) {
+    const prompt = buildBatchComparisonPrompt(rfp, batch);
+    const ai = await Gemini(prompt); // Must return JSON
+
+    if (!ai?.batch_best) continue;
+
+    // Save all scores in this batch
+    if (Array.isArray(ai.all_scores)) {
+      for (const result of ai.all_scores) {
+        await prisma.comparisons.create({
+          data: {
+            rfp_id,
+            result_json: result,
+            recommended_vendor_id: result.vendor_id || null,
+            generated_at: new Date(),
+          },
+        });
+      }
+    }
+
+    // Collect winner of this batch for final round
+    batchWinners.push(ai.batch_best);
+  }
+
+  const finalPrompt = buildFinalSelectionPrompt(batchWinners);
+  const finalResult = await Gemini(finalPrompt);
+
+  const bestProposalId = finalResult?.best_proposal_id;
+
+  //  Store the final best proposal selection
+  await prisma.comparisons.create({
+    data: {
+      rfp_id,
+      result_json: finalResult,
+      recommended_vendor_id: bestProposalId,
+    },
+  });
+
+  return {
+    message: "Comparison completed",
+    best_proposal_id: bestProposalId,
+    reason: finalResult?.reason,
+  };
+}

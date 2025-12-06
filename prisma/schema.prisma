@@ -108,9 +108,8 @@ model comparisons {
   rfp_id                String
   result_json           Json?
   recommended_vendor_id String
-  generated_at          DateTime?
+  generated_at          DateTime @updatedAt
   created_at            DateTime @default(now())
-  updated_at            DateTime @updatedAt
   is_active             Boolean  @default(true)
 
   // Relations

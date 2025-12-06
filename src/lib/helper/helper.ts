@@ -307,3 +307,74 @@ export function flattenProposalResponse(rawProposals: any[]) {
       .join(", ") ?? "",
   }));
 }
+
+export function chunkArray<T>(arr: T[], size: number): T[][] {
+  const res: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    res.push(arr.slice(i, i + size));
+  }
+  return res;
+}
+
+export function buildBatchComparisonPrompt(rfp: any, proposals: any[]) {
+  return `
+You are an expert procurement evaluator.
+
+Evaluate these proposals against this RFP and select the best one.
+
+RFP:
+${JSON.stringify(rfp, null, 2)}
+
+Proposals:
+${JSON.stringify(proposals, null, 2)}
+
+Scoring:
+- Requirements: 40
+- Budget: 25
+- Delivery: 15
+- Terms: 10
+- Value: 10
+
+Return ONLY JSON:
+{
+  "batch_best": {
+    "proposal_id": "string",
+    "vendor_id": "string",
+    "score": number,
+    "reason": "string"
+  },
+  "all_scores": [
+    { "proposal_id": "string", "vendor_id": "string", "score": number }
+  ]
+}
+  `;
+}
+
+export function buildFinalSelectionPrompt(batchWinners: any[]) {
+  return `
+You are an expert procurement evaluator.
+
+Your task:
+Given multiple proposals (each already pre-selected as the best from its batch), choose **exactly one final best proposal**.
+
+Rules:
+- Select strictly based on the **numerical score**.
+- If two proposals share the same score, choose the one with:
+    1. Higher technical performance
+    2. Better alignment with RFP specifications
+    3. Lower cost (use only as tie-breaker)
+
+Input Proposals:
+${JSON.stringify(batchWinners, null, 2)}
+
+You must return response ONLY in JSON:
+{
+  "best_proposal_id": "string",
+  "reason": "string"
+}
+
+DO NOT ADD any explanation outside JSON.
+  `;
+}
+
+
