@@ -166,6 +166,9 @@ export async function processEmail({
     completeness_score,
   } = parsed_proposal;
 
+  const deliveryDaysInt = delivery_timeline
+  ? parseInt(delivery_timeline.replace(/\D/g, ""), 10)
+  : null;
   // 7. Store structured proposal in proposals table
   await prisma.proposals.create({
     data: {
@@ -174,7 +177,7 @@ export async function processEmail({
       email_id: from,
       parsed_proposal,
       total_price: total_price || null,
-      delivery_days: delivery_timeline || null,
+      delivery_days: deliveryDaysInt,
       payment_terms: payment_terms || null,
       warranty: warranty || null,
       completeness_score: completeness_score * 100 || null,
