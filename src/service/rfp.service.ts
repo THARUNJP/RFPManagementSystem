@@ -203,7 +203,6 @@ export async function getVendorStatus(rfp_id: string) {
 export async function getAiRecommendation(rfp_id: string) {
   const comparison = await prisma.comparisons.findFirst({
     where: { rfp_id },
-    orderBy: { generated_at: "desc" },
   });
 
   if (!comparison) {
@@ -264,9 +263,14 @@ export async function comparisonNotExist(rfp_id: string) {
     data: {
       rfp_id,
       result_json: finalResult,
-      recommended_vendor_id: bestProposalId,
+      recommended_vendor_id: bestProposalId || null,
     },
   });
+
+   if (!bestProposalId)
+    throw new UnprocessableEntity(
+      "Request was valid, but no proposals could satisfy the requirements"
+    );
 
   return {
     message: "Comparison completed",
@@ -276,6 +280,7 @@ export async function comparisonNotExist(rfp_id: string) {
 }
 
 export async function comparisonExist(rfp_id: string, comparison: comparisons) {
+
   const proposals = await prisma.proposals.findMany({
     where: {
       rfp_id,
@@ -325,11 +330,15 @@ export async function comparisonExist(rfp_id: string, comparison: comparisons) {
   const finalResult = await Gemini(finalPrompt);
 
   const bestProposalId = finalResult?.best_proposal_id;
-
   //  Store the final best proposal selection
-  await prisma.comparisons.create({
+  console.log(finalResult, "??");
+
+  await prisma.comparisons.update({
+    where: {
+      comparison_id: comparison.comparison_id, // REQUIRED
+    },
     data: {
-      rfp_id,
+      rfp_id: bestProposalId, // optional if not changing
       result_json: finalResult,
       recommended_vendor_id: bestProposalId,
     },
